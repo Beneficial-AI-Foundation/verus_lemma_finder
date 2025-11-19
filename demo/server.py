@@ -5,6 +5,7 @@ Usage:
     uv run fastapi dev demo/server.py
 """
 
+import os
 import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -75,7 +76,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             try:
                 searchers[project_name] = LemmaSearcher(
                     index_file=index_file,
-                    use_embeddings=True
+                    use_embeddings=True  # Full semantic search!
                 )
                 print(f"✓ Loaded {project_name} index")
             except Exception as e:
