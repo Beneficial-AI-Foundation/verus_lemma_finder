@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verus Lemma Finder - Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 3rem;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .search-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            margin-bottom: 2rem;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        #searchInput {
+            flex: 1;
+            padding: 1rem;
+            font-size: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            transition: border-color 0.3s;
+        }
+
+        #searchInput:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        #searchButton {
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        #searchButton:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        #searchButton:active {
+            transform: translateY(0);
+        }
+
+        #searchButton:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .search-info {
+            font-size: 0.9rem;
+            color: #666;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: #e3f2fd;
+            color: #1976d2;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .results {
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .results-header {
+            color: white;
+            margin-bottom: 1.5rem;
+            font-size: 1.2rem;
+        }
+
+        .lemma-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .lemma-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .lemma-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .lemma-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+            font-family: 'Courier New', monospace;
+        }
+
+        .score {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .lemma-location {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .lemma-location a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .lemma-location a:hover {
+            text-decoration: underline;
+        }
+
+        .lemma-doc {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .lemma-signature {
+            background: #f5f5f5;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            margin-bottom: 1rem;
+            white-space: pre-wrap;
+            color: #333;
+        }
+
+        .specs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .spec-section {
+            background: #fafafa;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+        }
+
+        .spec-section h4 {
+            font-size: 0.85rem;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .spec-section ul {
+            list-style: none;
+            font-size: 0.9rem;
+            color: #555;
+            font-family: 'Courier New', monospace;
+        }
+
+        .spec-section li {
+            padding: 0.25rem 0;
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 1.2rem;
+            padding: 2rem;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .empty {
+            text-align: center;
+            color: white;
+            font-size: 1.2rem;
+            padding: 3rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .search-box {
+                flex-direction: column;
+            }
+
+            .specs {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Verus Lemma Finder</h1>
+            <p>Semantic search for Verus lemmas and specifications</p>
+        </div>
+
+        <div class="search-card">
+            <div class="search-box">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="Search for lemmas... (e.g., 'properties of addition' or 'sequence length')"
+                    autocomplete="off"
+                />
+                <button id="searchButton">Search</button>
+            </div>
+            <div class="search-info">
+                <span>Press Enter to search</span>
+                <span class="badge" id="searchMethod">semantic+keyword</span>
+            </div>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Searching...</p>
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div id="results" class="results">
+            <div class="results-header">
+                <span id="resultsCount"></span>
+            </div>
+            <div id="resultsContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        const searchInput = document.getElementById('searchInput');
+        const searchButton = document.getElementById('searchButton');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const results = document.getElementById('results');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const resultsCount = document.getElementById('resultsCount');
+        const searchMethod = document.getElementById('searchMethod');
+
+        // Initialize
+        checkHealth();
+
+        // Event listeners
+        searchButton.addEventListener('click', performSearch);
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') performSearch();
+        });
+
+        async function checkHealth() {
+            try {
+                const response = await fetch(`${API_BASE}/api/health`);
+                const data = await response.json();
+                console.log('Health check:', data);
+            } catch (err) {
+                console.error('Health check failed:', err);
+            }
+        }
+
+        async function performSearch() {
+            const query = searchInput.value.trim();
+            
+            if (!query) {
+                showError('Please enter a search query');
+                return;
+            }
+
+            // UI state
+            searchButton.disabled = true;
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            results.classList.remove('show');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/search`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        top_k: 10,
+                        project: 'dalek'
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Search failed: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                displayResults(data);
+                
+            } catch (err) {
+                showError(err.message);
+            } finally {
+                searchButton.disabled = false;
+                loading.style.display = 'none';
+            }
+        }
+
+        function displayResults(data) {
+            searchMethod.textContent = data.search_method;
+            
+            if (data.total === 0) {
+                resultsContainer.innerHTML = `
+                    <div class="empty">
+                        No results found for "${data.query}"<br>
+                        Try different keywords or a broader search.
+                    </div>
+                `;
+            } else {
+                resultsCount.textContent = `Found ${data.total} result${data.total !== 1 ? 's' : ''} for "${data.query}"`;
+                
+                resultsContainer.innerHTML = data.results.map(lemma => `
+                    <div class="lemma-card">
+                        <div class="lemma-header">
+                            <div class="lemma-name">${escapeHtml(lemma.name)}</div>
+                            <div class="score">${lemma.score.toFixed(3)}</div>
+                        </div>
+                        
+                        <div class="lemma-location">
+                            📄 ${escapeHtml(lemma.file_path)}${lemma.line_number ? `:${lemma.line_number}` : ''}
+                            ${lemma.github_url ? `
+                                • <a href="${lemma.github_url}" target="_blank">View on GitHub →</a>
+                            ` : ''}
+                        </div>
+
+                        ${lemma.documentation ? `
+                            <div class="lemma-doc">${escapeHtml(lemma.documentation)}</div>
+                        ` : ''}
+
+                        ${lemma.signature ? `
+                            <div class="lemma-signature">${escapeHtml(lemma.signature)}</div>
+                        ` : ''}
+
+                        ${(lemma.requires_clauses.length > 0 || lemma.ensures_clauses.length > 0) ? `
+                            <div class="specs">
+                                ${lemma.requires_clauses.length > 0 ? `
+                                    <div class="spec-section">
+                                        <h4>Requires</h4>
+                                        <ul>
+                                            ${lemma.requires_clauses.map(r => `<li>${escapeHtml(r)}</li>`).join('')}
+                                        </ul>
+                                    </div>
+                                ` : ''}
+                                
+                                ${lemma.ensures_clauses.length > 0 ? `
+                                    <div class="spec-section">
+                                        <h4>Ensures</h4>
+                                        <ul>
+                                            ${lemma.ensures_clauses.map(e => `<li>${escapeHtml(e)}</li>`).join('')}
+                                        </ul>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        ` : ''}
+                    </div>
+                `).join('');
+            }
+
+            results.classList.add('show');
+        }
+
+        function showError(message) {
+            error.textContent = `Error: ${message}`;
+            error.style.display = 'block';
+            results.classList.remove('show');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
+

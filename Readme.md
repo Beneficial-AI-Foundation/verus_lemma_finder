@@ -2,12 +2,30 @@
 
 Semantic search for Verus lemmas and specifications. Find lemmas in your project and vstd using natural language queries.
 
+## 🌐 Try the Web Demo!
+
+**Want to try it without installing anything?** Check out our web interface:
+
+```bash
+# Clone and run the demo
+git clone https://github.com/your-org/verus-lemma-finder
+cd verus-lemma-finder
+./demo/start_demo.sh
+```
+
+Then open http://localhost:8000 in your browser!
+
+Or deploy it for others: See [`demo/DEPLOYMENT.md`](demo/DEPLOYMENT.md)
+
+---
+
 ## Features
 
-- Semantic search using sentence transformers
-- Query normalization (variables, operators, implication order)
-- vstd integration
-- Interactive mode
+- **Semantic search** using sentence transformers
+- **Web interface** for easy exploration
+- **Query normalization** (variables, operators, implication order)
+- **vstd integration**
+- **Interactive mode**
 - Built on SCIP from verus-analyzer
 
 Query normalization example:
@@ -85,6 +103,8 @@ verus-lemma-finder index /path/to/project/project_scip.json --embeddings
 ## Documentation
 
 See [`docs/`](docs/) for detailed documentation:
+- **Web Demo**: [`demo/QUICKSTART.md`](demo/QUICKSTART.md) - Start the web interface
+- **Deployment**: [`demo/DEPLOYMENT.md`](demo/DEPLOYMENT.md) - Share with others
 - Installation: [`install.md`](docs/install.md)
 - Architecture: [`lemma-search-design.md`](docs/lemma-search-design.md)
 - Configuration: [`configuration.md`](docs/configuration.md)
