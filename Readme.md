@@ -113,7 +113,7 @@ verus_lemma_finder/
 ## Requirements
 
 - Python 3.12+
-- `verus-analyzer` (from Verus installation)
+- `verus-analyzer` (https://github.com/verus-lang/verus-analyzer)
 - `scip` CLI tool (https://github.com/sourcegraph/scip)
 - `sentence-transformers` (installed automatically)
 
