@@ -2,7 +2,7 @@
 name = "verus-lemma-finder"
 version = "1.0.0"
 description = "A semantic search tool for discovering Verus lemmas"
-readme = "README.md"
+readme = "Readme.md"
 requires-python = ">=3.12"
 license = { text = "MIT" }
 authors = [
@@ -30,6 +30,10 @@ dev = [
     "black>=22.0.0",
     "mypy>=0.950",
     "ruff>=0.1.0",
+]
+demo = [
+    "fastapi>=0.109.0",
+    "uvicorn[standard]>=0.27.0",
 ]
 
 [project.scripts]
