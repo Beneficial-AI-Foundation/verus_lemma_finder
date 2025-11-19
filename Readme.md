@@ -15,8 +15,6 @@ cd verus-lemma-finder
 
 Then open http://localhost:8000 in your browser!
 
-Or deploy it for others: See [`demo/DEPLOYMENT.md`](demo/DEPLOYMENT.md)
-
 ---
 
 ## Features
