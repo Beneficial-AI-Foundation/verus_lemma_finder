@@ -34,9 +34,6 @@ ENV PORT=8000
 # Expose port
 EXPOSE 8000
 
-# Health check (Railway sets PORT dynamically)
-# Note: HEALTHCHECK doesn't support env vars, so we'll skip it for now
-
-# Run the application
-CMD uvicorn demo.server:app --host 0.0.0.0 --port $PORT
+# Run the application (Fly.io will override PORT if needed)
+CMD uvicorn demo.server:app --host 0.0.0.0 --port ${PORT:-8000}
 
