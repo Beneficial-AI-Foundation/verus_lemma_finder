@@ -29,9 +29,7 @@ def generate_scip_json(project_dir: Path, output_file: Path) -> bool:
         return False
 
     if not project_dir.is_dir():
-        print(
-            f"❌ Error: Project directory does not exist or is not a directory: {project_dir}"
-        )
+        print(f"❌ Error: Project directory does not exist or is not a directory: {project_dir}")
         return False
 
     print(f"📋 Generating SCIP index for {project_dir}...")

@@ -96,7 +96,7 @@ def generate_scip(project_dir: Path, output_file: Path) -> bool:
             cwd=project_dir,
             capture_output=True,
             text=True,
-            timeout=300  # 5 minute timeout
+            timeout=300,  # 5 minute timeout
         )
 
         if result.returncode != 0:
@@ -111,10 +111,7 @@ def generate_scip(project_dir: Path, output_file: Path) -> bool:
 
         print("   Running: scip print --json index.scip")
         result = subprocess.run(
-            ["scip", "print", "--json", str(scip_file)],
-            capture_output=True,
-            text=True,
-            timeout=120
+            ["scip", "print", "--json", str(scip_file)], capture_output=True, text=True, timeout=120
         )
 
         if result.returncode != 0:
@@ -145,7 +142,7 @@ def build_index(
     output_file: Path,
     project_name: str,
     use_embeddings: bool = True,
-    path_filter: str = ""
+    path_filter: str = "",
 ) -> int:
     """Build the semantic search index."""
     print(f"\n🔧 Building index from {scip_file}...")
@@ -158,7 +155,7 @@ def build_index(
             repo_root=repo_root,
             use_embeddings=use_embeddings,
             source=project_name,
-            path_filter=path_filter if path_filter else None
+            path_filter=path_filter if path_filter else None,
         )
 
         lemmas = indexer.build_index()
@@ -188,7 +185,7 @@ def add_to_demo_server(
     branch: str,
     path_prefix: str,
     index_file: str,
-    force: bool = False
+    force: bool = False,
 ) -> bool:
     """Add the project to the demo server configuration."""
     server_file = PROJECT_ROOT / "demo" / "server.py"
@@ -216,7 +213,8 @@ def add_to_demo_server(
 
     # Find GITHUB_REPOS and add entry
     import re
-    pattern = r'(GITHUB_REPOS\s*=\s*\{[^}]+)'
+
+    pattern = r"(GITHUB_REPOS\s*=\s*\{[^}]+)"
     match = re.search(pattern, content, re.DOTALL)
 
     if match:
@@ -224,7 +222,7 @@ def add_to_demo_server(
         insert_pos = match.end()
         # Check if we need a comma
         before = content[:insert_pos].rstrip()
-        new_entry = ',\n' + new_entry if not before.endswith(',') else '\n' + new_entry
+        new_entry = ",\n" + new_entry if not before.endswith(",") else "\n" + new_entry
 
         new_content = content[:insert_pos] + new_entry + content[insert_pos:]
         server_file.write_text(new_content)
@@ -275,7 +273,9 @@ def run_interactive() -> int:
     # Step 3: Build Index
     print_step(3, "Build Semantic Search Index")
 
-    use_embeddings = prompt_yes_no("Use embeddings for semantic search? (recommended)", default=True)
+    use_embeddings = prompt_yes_no(
+        "Use embeddings for semantic search? (recommended)", default=True
+    )
 
     # Path filter (for mono-repos)
     print("\nPath filter (optional):")
@@ -296,7 +296,7 @@ def run_interactive() -> int:
         output_file=output_file,
         project_name=project_name,
         use_embeddings=use_embeddings,
-        path_filter=path_filter
+        path_filter=path_filter,
     )
 
     if lemma_count == 0:
@@ -324,7 +324,7 @@ def run_interactive() -> int:
                 github_url=github_url,
                 branch=branch,
                 path_prefix=path_prefix,
-                index_file=relative_index
+                index_file=relative_index,
             )
         else:
             print("⚠️  Skipping demo server (no GitHub URL provided)")
@@ -396,7 +396,7 @@ def print_summary(project_name: str, output_file: Path, lemma_count: int, demo_a
     print("You can now search your project:")
     print()
     print("  # CLI search")
-    print(f"  uv run python -m verus_lemma_finder search \"your query\" {output_file}")
+    print(f'  uv run python -m verus_lemma_finder search "your query" {output_file}')
     print()
     print("  # Interactive mode")
     print(f"  uv run python -m verus_lemma_finder interactive {output_file}")
@@ -454,7 +454,9 @@ def run_non_interactive(args: argparse.Namespace) -> int:
     # Step 2: Build Index
     data_dir = PROJECT_ROOT / "data"
     data_dir.mkdir(exist_ok=True)
-    output_file = Path(args.output) if args.output else data_dir / f"{project_name}_lemma_index.json"
+    output_file = (
+        Path(args.output) if args.output else data_dir / f"{project_name}_lemma_index.json"
+    )
 
     use_embeddings = not args.no_embeddings
     path_filter = args.path_filter or ""
@@ -470,7 +472,7 @@ def run_non_interactive(args: argparse.Namespace) -> int:
         output_file=output_file,
         project_name=project_name,
         use_embeddings=use_embeddings,
-        path_filter=path_filter
+        path_filter=path_filter,
     )
 
     if lemma_count == 0:
@@ -488,7 +490,7 @@ def run_non_interactive(args: argparse.Namespace) -> int:
             branch=args.branch or "main",
             path_prefix=args.github_path_prefix or "",
             index_file=relative_index,
-            force=args.force
+            force=args.force,
         )
 
     # Summary
@@ -519,56 +521,38 @@ Examples:
 
   # Skip demo server integration
   python scripts/add_index.py --name myproject --path /path/to/project --no-demo
-"""
+""",
     )
 
+    parser.add_argument("--name", "-n", help="Project name (e.g., 'myproject')")
+    parser.add_argument("--path", "-p", help="Path to your Verus project directory")
     parser.add_argument(
-        "--name", "-n",
-        help="Project name (e.g., 'myproject')"
+        "--scip",
+        "-s",
+        help="Path to existing SCIP JSON file (optional, will generate if not provided)",
     )
     parser.add_argument(
-        "--path", "-p",
-        help="Path to your Verus project directory"
+        "--output", "-o", help="Output index file path (default: data/<name>_lemma_index.json)"
     )
     parser.add_argument(
-        "--scip", "-s",
-        help="Path to existing SCIP JSON file (optional, will generate if not provided)"
-    )
-    parser.add_argument(
-        "--output", "-o",
-        help="Output index file path (default: data/<name>_lemma_index.json)"
-    )
-    parser.add_argument(
-        "--path-filter",
-        help="Filter to specific paths within the project (for mono-repos)"
+        "--path-filter", help="Filter to specific paths within the project (for mono-repos)"
     )
     parser.add_argument(
         "--no-embeddings",
         action="store_true",
-        help="Skip computing embeddings (keyword search only)"
+        help="Skip computing embeddings (keyword search only)",
     )
     parser.add_argument(
-        "--github-url",
-        help="GitHub repository URL (for 'View on GitHub' links in demo)"
+        "--github-url", help="GitHub repository URL (for 'View on GitHub' links in demo)"
     )
+    parser.add_argument("--branch", default="main", help="GitHub branch name (default: main)")
+    parser.add_argument("--github-path-prefix", help="Path prefix in GitHub repo (e.g., 'src/')")
+    parser.add_argument("--no-demo", action="store_true", help="Skip adding to demo server")
     parser.add_argument(
-        "--branch",
-        default="main",
-        help="GitHub branch name (default: main)"
-    )
-    parser.add_argument(
-        "--github-path-prefix",
-        help="Path prefix in GitHub repo (e.g., 'src/')"
-    )
-    parser.add_argument(
-        "--no-demo",
+        "--force",
+        "-f",
         action="store_true",
-        help="Skip adding to demo server"
-    )
-    parser.add_argument(
-        "--force", "-f",
-        action="store_true",
-        help="Force overwrite existing demo server configuration"
+        help="Force overwrite existing demo server configuration",
     )
 
     return parser

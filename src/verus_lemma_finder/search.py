@@ -39,15 +39,15 @@ class LemmaSearcher:
         with open(self.index_file) as f:
             data = json.load(f)
 
-        for lemma_dict in data.get('lemmas', []):
+        for lemma_dict in data.get("lemmas", []):
             self.lemmas.append(LemmaInfo(**lemma_dict))
 
         print(f"Loaded {len(self.lemmas)} lemmas from index")
 
         # Try to load embeddings if available
-        has_embeddings = data.get('has_embeddings', False)
+        has_embeddings = data.get("has_embeddings", False)
         if has_embeddings and self.use_embeddings:
-            embeddings_file = self.index_file.with_suffix('.embeddings.npy')
+            embeddings_file = self.index_file.with_suffix(".embeddings.npy")
             if embeddings_file.exists():
                 if not EMBEDDINGS_AVAILABLE:
                     print("⚠️  Embeddings available but sentence-transformers not installed")
@@ -64,13 +64,13 @@ class LemmaSearcher:
     def keyword_search(self, query: str, top_k: int = 10) -> list[tuple[LemmaInfo, float]]:
         """Simple keyword-based search"""
         query_lower = query.lower()
-        query_terms = set(re.findall(r'\w+', query_lower))
+        query_terms = set(re.findall(r"\w+", query_lower))
 
         results = []
 
         for lemma in self.lemmas:
             searchable = lemma.to_searchable_text().lower()
-            searchable_terms = set(re.findall(r'\w+', searchable))
+            searchable_terms = set(re.findall(r"\w+", searchable))
 
             # Calculate score based on term overlap
             overlap = len(query_terms & searchable_terms)
@@ -83,9 +83,11 @@ class LemmaSearcher:
             doc_lower = lemma.documentation.lower()
             doc_matches = sum(1 for term in query_terms if term in doc_lower)
 
-            score = (overlap +
-                    name_matches * self.config.search.name_match_boost +
-                    doc_matches * self.config.search.doc_match_boost)
+            score = (
+                overlap
+                + name_matches * self.config.search.name_match_boost
+                + doc_matches * self.config.search.doc_match_boost
+            )
 
             if score > 0:
                 results.append((lemma, score))
@@ -120,7 +122,9 @@ class LemmaSearcher:
 
         return results
 
-    def hybrid_search(self, query: str, top_k: int = 10, keyword_weight: float | None = None) -> list[tuple[LemmaInfo, float]]:
+    def hybrid_search(
+        self, query: str, top_k: int = 10, keyword_weight: float | None = None
+    ) -> list[tuple[LemmaInfo, float]]:
         """Hybrid search combining keyword and semantic search"""
         if self.embeddings is None:
             return self.keyword_search(query, top_k)
@@ -142,8 +146,8 @@ class LemmaSearcher:
             lemma_key = lemma.name
             normalized_score = score / max_semantic if max_semantic > 0 else 0
             combined_scores[lemma_key] = {
-                'lemma': lemma,
-                'score': normalized_score * (1 - keyword_weight)
+                "lemma": lemma,
+                "score": normalized_score * (1 - keyword_weight),
             }
 
         # Normalize keyword scores
@@ -153,15 +157,15 @@ class LemmaSearcher:
             normalized_score = score / max_keyword if max_keyword > 0 else 0
 
             if lemma_key in combined_scores:
-                combined_scores[lemma_key]['score'] += normalized_score * keyword_weight
+                combined_scores[lemma_key]["score"] += normalized_score * keyword_weight
             else:
                 combined_scores[lemma_key] = {
-                    'lemma': lemma,
-                    'score': normalized_score * keyword_weight
+                    "lemma": lemma,
+                    "score": normalized_score * keyword_weight,
                 }
 
         # Sort by combined score
-        results = [(v['lemma'], v['score']) for v in combined_scores.values()]
+        results = [(v["lemma"], v["score"]) for v in combined_scores.values()]
         results.sort(key=lambda x: x[1], reverse=True)
 
         return results[:top_k]
@@ -205,4 +209,3 @@ class LemmaSearcher:
     def search(self, query: str, top_k: int = 10) -> list[tuple[LemmaInfo, float]]:
         """Alias for fuzzy_search"""
         return self.fuzzy_search(query, top_k)
-

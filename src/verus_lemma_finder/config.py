@@ -31,23 +31,15 @@ class SearchConfig:
     def validate(self) -> None:
         """Validate configuration values."""
         if not 0 <= self.keyword_weight <= 1:
-            raise ValueError(
-                f"keyword_weight must be in [0, 1], got {self.keyword_weight}"
-            )
+            raise ValueError(f"keyword_weight must be in [0, 1], got {self.keyword_weight}")
         if not 0 <= self.semantic_weight <= 1:
-            raise ValueError(
-                f"semantic_weight must be in [0, 1], got {self.semantic_weight}"
-            )
+            raise ValueError(f"semantic_weight must be in [0, 1], got {self.semantic_weight}")
         if self.default_top_k < 1:
             raise ValueError(f"default_top_k must be >= 1, got {self.default_top_k}")
         if self.name_match_boost < 0:
-            raise ValueError(
-                f"name_match_boost must be >= 0, got {self.name_match_boost}"
-            )
+            raise ValueError(f"name_match_boost must be >= 0, got {self.name_match_boost}")
         if self.doc_match_boost < 0:
-            raise ValueError(
-                f"doc_match_boost must be >= 0, got {self.doc_match_boost}"
-            )
+            raise ValueError(f"doc_match_boost must be >= 0, got {self.doc_match_boost}")
 
 
 @dataclass
@@ -69,9 +61,7 @@ class IndexingConfig:
 
     # SCIP constants (from SCIP protocol specification)
     scip_function_kind: int = 17  # SCIP kind code for functions
-    scip_definition_role: int = (
-        1  # SCIP symbol_roles value for definitions (not references)
-    )
+    scip_definition_role: int = 1  # SCIP symbol_roles value for definitions (not references)
 
     def validate(self) -> None:
         """Validate configuration values."""
@@ -91,9 +81,7 @@ class ExtractionConfig:
     def validate(self) -> None:
         """Validate configuration values."""
         if self.max_cached_files < 1:
-            raise ValueError(
-                f"max_cached_files must be >= 1, got {self.max_cached_files}"
-            )
+            raise ValueError(f"max_cached_files must be >= 1, got {self.max_cached_files}")
 
 
 @dataclass

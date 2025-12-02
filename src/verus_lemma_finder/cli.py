@@ -65,9 +65,7 @@ def _validate_vstd_input_files(verus_scip: Path, base_index: Path, verus_root: P
     if not base_index.exists():
         print(f"❌ Error: Base index not found: {base_index}")
         print("\nCreate it first with:")
-        print(
-            "  uv run python -m verus_lemma_finder index <your_project_scip>.json"
-        )
+        print("  uv run python -m verus_lemma_finder index <your_project_scip>.json")
         return 1
 
     return None
@@ -101,9 +99,7 @@ def _check_embeddings_compatibility(base_index: Path) -> tuple[bool, bool]:
 
     # Warn if base index has embeddings but they're not available
     if use_embeddings and not embeddings_available:
-        print(
-            "⚠️  Warning: Base index has embeddings but sentence-transformers not available"
-        )
+        print("⚠️  Warning: Base index has embeddings but sentence-transformers not available")
         print("   New vstd lemmas will be added without embeddings")
         use_embeddings = False
 
@@ -322,9 +318,7 @@ def cmd_interactive(args: argparse.Namespace) -> int:
                 print()
 
             # Ask if user wants details
-            choice = input(
-                "Enter number for details (or press Enter to continue): "
-            ).strip()
+            choice = input("Enter number for details (or press Enter to continue): ").strip()
             if choice.isdigit():
                 idx = int(choice) - 1
                 if 0 <= idx < len(results):
@@ -345,9 +339,7 @@ def create_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # Generate SCIP command
-    generate_parser = subparsers.add_parser(
-        "generate-scip", help="Generate SCIP JSON from project"
-    )
+    generate_parser = subparsers.add_parser("generate-scip", help="Generate SCIP JSON from project")
     generate_parser.add_argument(
         "project_dir", help="Project directory (where to run verus-analyzer)"
     )
@@ -358,9 +350,7 @@ def create_parser() -> argparse.ArgumentParser:
     )
 
     # Index command
-    index_parser = subparsers.add_parser(
-        "index", help="Build lemma index from SCIP data"
-    )
+    index_parser = subparsers.add_parser("index", help="Build lemma index from SCIP data")
     index_parser.add_argument("scip_file", help="Path to SCIP JSON file")
     index_parser.add_argument(
         "-o", "--output", help="Output index file (default: lemma_index.json)"
@@ -390,9 +380,7 @@ def create_parser() -> argparse.ArgumentParser:
     )
 
     # Interactive command
-    interactive_parser = subparsers.add_parser(
-        "interactive", help="Interactive search mode"
-    )
+    interactive_parser = subparsers.add_parser("interactive", help="Interactive search mode")
     interactive_parser.add_argument("index_file", help="Path to lemma index file")
 
     # Setup vstd command
@@ -407,13 +395,9 @@ def create_parser() -> argparse.ArgumentParser:
     )
 
     # Add vstd command
-    add_vstd_parser = subparsers.add_parser(
-        "add-vstd", help="Add vstd lemmas to existing index"
-    )
+    add_vstd_parser = subparsers.add_parser("add-vstd", help="Add vstd lemmas to existing index")
     add_vstd_parser.add_argument("verus_scip_file", help="Path to Verus SCIP JSON file")
-    add_vstd_parser.add_argument(
-        "base_index_file", help="Path to your existing lemma index"
-    )
+    add_vstd_parser.add_argument("base_index_file", help="Path to your existing lemma index")
     add_vstd_parser.add_argument(
         "-o", "--output", help="Output file (default: overwrites base index)"
     )

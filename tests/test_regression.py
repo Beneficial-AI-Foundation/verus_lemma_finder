@@ -233,9 +233,7 @@ class TestDivisionBounds:
 def test_expected_lemmas_exist(searcher, lemma_name):
     """Verify that all expected lemmas exist in the index"""
     exists = any(lemma.name == lemma_name for lemma in searcher.lemmas)
-    assert exists, (
-        f"Expected lemma '{lemma_name}' not found in index. Check your SCIP indexing."
-    )
+    assert exists, f"Expected lemma '{lemma_name}' not found in index. Check your SCIP indexing."
 
 
 # ============================================================================

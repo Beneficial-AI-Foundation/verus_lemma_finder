@@ -50,6 +50,7 @@ class LemmaInfo:
             # Apply operator normalization (but not variable renaming for lemmas)
             # Use QueryNormalizer to avoid code duplication
             from .normalization import QueryNormalizer
+
             normalizer = QueryNormalizer()
             text = normalizer.normalize_operators_only(text)
 
