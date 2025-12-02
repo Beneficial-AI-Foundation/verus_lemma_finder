@@ -3,7 +3,7 @@ Data models for Verus lemma search.
 """
 
 from dataclasses import asdict, dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 @dataclass
@@ -12,11 +12,11 @@ class LemmaInfo:
 
     name: str
     file_path: str
-    line_number: Optional[int]
+    line_number: int | None
     documentation: str
     signature: str
-    requires_clauses: List[str]
-    ensures_clauses: List[str]
+    requires_clauses: list[str]
+    ensures_clauses: list[str]
     symbol_id: str
     source: str = "project"  # "project" or "vstd" or other source
 
@@ -82,6 +82,6 @@ class LemmaInfo:
 
         return "\n".join(lines)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization"""
         return asdict(self)

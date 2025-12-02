@@ -38,8 +38,8 @@ class ModelCache:
     """
 
     _instance: Optional["ModelCache"] = None
-    _model: Optional[Any] = None
-    _model_name: Optional[str] = None
+    _model: Any | None = None
+    _model_name: str | None = None
 
     def __new__(cls) -> "ModelCache":
         """Ensure only one instance exists (singleton pattern)."""
@@ -48,7 +48,7 @@ class ModelCache:
         return cls._instance
 
     @classmethod
-    def get_model(cls, model_name: str = "all-MiniLM-L6-v2") -> Optional[Any]:
+    def get_model(cls, model_name: str = "all-MiniLM-L6-v2") -> Any | None:
         """
         Get or load the sentence transformer model (cached).
 
@@ -86,7 +86,7 @@ class ModelCache:
         return cls._model is not None
 
 
-def get_sentence_transformer_model(model_name: str = "all-MiniLM-L6-v2") -> Optional[Any]:
+def get_sentence_transformer_model(model_name: str = "all-MiniLM-L6-v2") -> Any | None:
     """
     Get or load the sentence transformer model (cached).
 

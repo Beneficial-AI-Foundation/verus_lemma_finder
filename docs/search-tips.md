@@ -83,17 +83,7 @@ This is better than just:
 
 Because it captures the complete logical relationship.
 
-### 7. Use semantic search (embeddings)
-
-For best results, ensure your index was built with `--embeddings`:
-
-```bash
-uv run verus-lemma-finder index scip_file.json --embeddings
-```
-
-Without embeddings, the tool falls back to keyword matching, which is less effective for mathematical queries.
-
-### 8. Try rephrasing if needed
+### 7. Try rephrasing if needed
 
 If you don't get good results, try:
 - Adding more context
@@ -120,7 +110,7 @@ The tool shows:
 For exploration, use interactive mode:
 
 ```bash
-uv run verus-lemma-finder interactive lemma_index.json
+uv run python -m verus_lemma_finder interactive lemma_index.json
 ```
 
 This lets you:
@@ -136,7 +126,7 @@ Try:
 1. Simplifying your query
 2. Using more common mathematical terms
 3. Checking if your lemma index includes the relevant files
-4. Regenerating the index with `--embeddings`
+4. Regenerating the index (embeddings are enabled by default)
 
 ### "Wrong lemmas in results"
 
@@ -153,7 +143,7 @@ If you regenerated code recently:
 3. Check that sentence-transformers is installed
 
 ```bash
-uv sync  # Installs all dependencies
+uv sync --extra dev  # Installs all dependencies including maturin
 ```
 
 ## Examples from Real Use

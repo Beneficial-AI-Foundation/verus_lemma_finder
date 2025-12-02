@@ -8,7 +8,6 @@ Configuration can be loaded from a JSON file or used with defaults.
 import json
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import List, Optional
 
 
 @dataclass
@@ -59,12 +58,12 @@ class IndexingConfig:
     embedding_model: str = "all-MiniLM-L6-v2"  # Lightweight but effective model
 
     # File filtering
-    lemma_file_keywords: List[str] = field(
+    lemma_file_keywords: list[str] = field(
         default_factory=lambda: ["lemmas", "specs", "field.rs", "scalar.rs"]
     )  # Files likely to contain lemmas
 
     # Function filtering
-    lemma_function_prefixes: List[str] = field(
+    lemma_function_prefixes: list[str] = field(
         default_factory=lambda: ["lemma_", "axiom_", "spec_", "proof_"]
     )  # Function prefixes that indicate lemmas
 
@@ -166,7 +165,7 @@ class Config:
         return config
 
     @classmethod
-    def load_from_file_or_default(cls, config_path: Optional[Path] = None) -> "Config":
+    def load_from_file_or_default(cls, config_path: Path | None = None) -> "Config":
         """
         Load configuration from file if it exists, otherwise use defaults.
 
@@ -216,10 +215,10 @@ class Config:
 
 
 # Global configuration instance (lazy-loaded singleton)
-_config: Optional[Config] = None
+_config: Config | None = None
 
 
-def get_config(config_path: Optional[Path] = None, reload: bool = False) -> Config:
+def get_config(config_path: Path | None = None, reload: bool = False) -> Config:
     """
     Get the global configuration instance (singleton pattern).
 

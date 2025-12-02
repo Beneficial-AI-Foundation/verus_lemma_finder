@@ -5,7 +5,7 @@ Lemma indexing from SCIP data.
 import json
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any
 
 from .config import Config, get_config
 from .extraction import SpecExtractor
@@ -15,6 +15,10 @@ from .utils import EMBEDDINGS_AVAILABLE, get_sentence_transformer_model
 # Type checking imports (for static analysis only)
 if TYPE_CHECKING:
     import numpy as np
+
+# Runtime import of numpy if available
+if EMBEDDINGS_AVAILABLE:
+    import numpy as np  # type: ignore
 
 
 class LemmaIndexer:
@@ -26,14 +30,14 @@ class LemmaIndexer:
         repo_root: Path,
         use_embeddings: bool = False,
         source: str = "project",
-        path_filter: Optional[str] = None,
-        config: Optional[Config] = None,
+        path_filter: str | None = None,
+        config: Config | None = None,
     ):
         self.scip_file = scip_file
         self.repo_root = repo_root
         self.config = config if config is not None else get_config()
         self.spec_extractor = SpecExtractor(repo_root, config=self.config)
-        self.lemmas: List[LemmaInfo] = []
+        self.lemmas: list[LemmaInfo] = []
         self.use_embeddings = use_embeddings
         self.embeddings = None
         self.model = None
@@ -43,7 +47,7 @@ class LemmaIndexer:
         )
 
         # Cache for symbol -> line number mapping from SCIP occurrences
-        self.symbol_line_map: Dict[str, int] = {}
+        self.symbol_line_map: dict[str, int] = {}
 
         if use_embeddings:
             if not EMBEDDINGS_AVAILABLE:
@@ -58,8 +62,8 @@ class LemmaIndexer:
                 )
 
     def _extract_line_numbers_from_occurrences(
-        self, occurrences: List[Dict]
-    ) -> Dict[str, int]:
+        self, occurrences: list[dict]
+    ) -> dict[str, int]:
         """
         Extract line numbers from SCIP occurrences.
 
@@ -91,13 +95,14 @@ class LemmaIndexer:
             True if document should be indexed, False otherwise
         """
         # Apply path filter if specified (e.g., only index vstd files)
-        if self.path_filter:
+        # Use `is not None` to allow empty string to mean "include all paths"
+        if self.path_filter is not None:
             return path.startswith(self.path_filter)
 
         # Focus on lemma files and specs (if no path filter, use default filtering)
         return any(keyword in path for keyword in self.config.indexing.lemma_file_keywords)
 
-    def _should_index_symbol(self, symbol: Dict[str, Any], name: str) -> bool:
+    def _should_index_symbol(self, symbol: dict[str, Any], name: str) -> bool:
         """
         Determine if a symbol should be indexed as a lemma.
 
@@ -121,8 +126,8 @@ class LemmaIndexer:
         return "proof" in sig.get("text", "")
 
     def _create_lemma_from_symbol(
-        self, symbol: Dict[str, Any], doc_line_map: Dict[str, int], default_path: str
-    ) -> Tuple[LemmaInfo, bool]:
+        self, symbol: dict[str, Any], doc_line_map: dict[str, int], default_path: str
+    ) -> tuple[LemmaInfo, bool]:
         """
         Create a LemmaInfo object from a SCIP symbol.
 
@@ -195,7 +200,7 @@ class LemmaIndexer:
                 f"  Line numbers from parsing: {line_nums_from_parsing} ({parsing_percentage:.1f}%)"
             )
 
-    def build_index(self) -> List[LemmaInfo]:
+    def build_index(self) -> list[LemmaInfo]:
         """
         Extract all lemmas from SCIP data.
 
@@ -283,9 +288,9 @@ class LemmaIndexer:
 
 def merge_indexes(
     base_index_file: Path,
-    new_lemmas: List[LemmaInfo],
+    new_lemmas: list[LemmaInfo],
     output_file: Path,
-    embeddings_array: Optional[Any] = None,
+    embeddings_array: Any | None = None,
 ) -> None:
     """Merge new lemmas into an existing index"""
     # Load base index
@@ -297,7 +302,7 @@ def merge_indexes(
     ]
 
     # Load base embeddings if they exist
-    base_embeddings: Optional[Any] = None
+    base_embeddings: Any | None = None
     embeddings_file = base_index_file.with_suffix(".embeddings.npy")
     if embeddings_file.exists() and EMBEDDINGS_AVAILABLE:
         base_embeddings = np.load(embeddings_file)
@@ -309,7 +314,7 @@ def merge_indexes(
     print(f"  Total: {len(all_lemmas)}")
 
     # Merge embeddings if available
-    merged_embeddings: Optional[Any] = None
+    merged_embeddings: Any | None = None
     if base_embeddings is not None and embeddings_array is not None:
         merged_embeddings = np.vstack([base_embeddings, embeddings_array])
         print(f"  Merged embeddings: {merged_embeddings.shape}")

@@ -1,219 +1,107 @@
 # Verus Lemma Finder
 
-Semantic search for Verus lemmas and specifications. Find lemmas in your project and vstd using natural language queries.
+Semantic search for Verus lemmas. Find lemmas using natural language queries.
 
 ## ✨ Highlights
 
-- **Semantic search** using sentence transformers - find lemmas by meaning, not just keywords
-- **Proper Verus parsing** with `verus_syn` - accurate extraction of `requires`, `ensures`, `decreases`
+- **Semantic search** - find lemmas by meaning, not just keywords
+- **Proper Verus parsing** with `verus_syn` - accurate `requires`/`ensures`/`decreases` extraction
 - **Web interface** for easy exploration
-- **Query normalization** - handles variable names, operators, implication order
-- **vstd integration** - search both your project and the standard library
+- **Query normalization** - variable names and math operators are normalized
 
-## 🌐 Try the Web Demo!
-
-**Want to try it without installing anything?** Check out our web interface:
+## Quick Start
 
 ```bash
-# Clone and run the demo (no verus-analyzer or scip needed!)
-git clone https://github.com/your-org/verus-lemma-finder
-cd verus-lemma-finder
+git clone https://github.com/Beneficial-AI-Foundation/verus_lemma_finder.git
+cd verus_lemma_finder
+uv sync --extra dev
+
+# Build Rust parser for accurate Verus parsing (requires Rust toolchain)
+uv run maturin develop --release
+```
+
+### Web Demo
+
+```bash
 ./demo/start_demo.sh
 ```
 
-Then open http://localhost:8000 in your browser!
+Open http://localhost:8000 and search!
 
-**Note**: The demo uses pre-built index files. You only need `verus-analyzer` and `scip` if you want to build your own indexes from Verus source code.
+**Included indexes** (in `data/`):
+- `vstd_lemma_index.json` - Verus standard library 
+- `curve25519-dalek_lemma_index.json` - [curve25519-dalek](https://github.com/Beneficial-AI-Foundation/dalek-lite)
 
----
-
-## Features
-
-- **Semantic search** using sentence transformers (all-MiniLM-L6-v2)
-- **Accurate Verus parsing** with [`verus_syn`](https://crates.io/crates/verus_syn) - handles all Verus syntax:
-  - `requires`, `ensures`, `decreases` clauses
-  - Quantifiers: `forall|x|`, `exists|x|`
-  - Operators: `==>`, `&&&`, `|||`, `=~=`
-  - Functions inside `verus!` macros (including inside `impl` blocks)
-- **Web interface** for easy exploration
-- **Query normalization** (variables, operators, implication order)
-- **vstd integration**
-- **Interactive mode**
-- Built on SCIP from verus-analyzer
-
-Query normalization example:
-```bash
-# These queries match the same lemmas:
-"if a times b <= c then a <= c div b"
-"x <= z / y if x * y <= z"
-"if m * n <= p then m <= p / n"
-```
-
-## Installation
-
-### Quick Install (pre-built wheels)
+### CLI Search
 
 ```bash
-# Using uv (recommended)
-uv sync
+# Search for lemmas about division
+uv run python -m verus_lemma_finder search "dividing both sides preserves inequality" data/vstd_lemma_index.json
 
-# Or using pip
-pip install -e .
-pip install -e ".[dev]"  # with dev dependencies
+# Interactive mode - explore and refine queries
+uv run python -m verus_lemma_finder interactive data/vstd_lemma_index.json
 ```
 
-### Building with Rust Parser (recommended for best accuracy)
-
-The Rust parser provides accurate extraction of Verus specifications using `verus_syn`:
+## Add Your Own Project
 
 ```bash
-# Install maturin
-pip install maturin
+# Interactive (recommended)
+uv run python scripts/add_index.py
 
-# Build and install with Rust parser
-maturin develop --release
-
-# Or using uvx
-uvx maturin develop --release
+# Or one command
+uv run python scripts/add_index.py --name myproject --path /path/to/project
 ```
 
-This enables proper parsing of:
-- `requires`, `ensures`, `decreases` clauses
-- Complex Verus syntax (`forall|x|`, `==>`, `&&&`)
-- Functions inside `verus!` macros (including in `impl` blocks)
-
-See [`docs/install.md`](docs/install.md) and [`docs/rust-parser.md`](docs/rust-parser.md) for details.
-
-## Usage
-
-### Index your project
-
-```bash
-# Generate SCIP from your Verus project
-cd /path/to/your/project
-verus-analyzer scip .
-scip print --json index.scip > project_scip.json
-
-# Build searchable index
-verus-lemma-finder index project_scip.json -o lemma_index.json --embeddings
-```
-
-### Search
-
-```bash
-# Basic search
-verus-lemma-finder search "division properties" lemma_index.json
-
-# Interactive mode
-verus-lemma-finder interactive lemma_index.json
-
-# With uv
-uv run verus-lemma-finder search "your query" lemma_index.json
-```
-
-### vstd integration
-
-```bash
-# Setup vstd (one-time)
-verus-lemma-finder setup-vstd ./verus
-verus-lemma-finder generate-scip ./verus
-
-# Add to your index
-verus-lemma-finder add-vstd ./verus/verus_scip.json lemma_index.json
-
-# Search both project and vstd
-verus-lemma-finder search "division properties" lemma_index.json
-```
-
-### Generate SCIP automatically
-
-```bash
-# Generate SCIP for a project automatically
-verus-lemma-finder generate-scip /path/to/project
-
-# Then index it
-verus-lemma-finder index /path/to/project/project_scip.json --embeddings
-```
+This generates SCIP, builds the index, and configures the demo server.
 
 ## Documentation
 
-See [`docs/`](docs/) for detailed documentation:
-- **Web Demo**: [`demo/QUICKSTART.md`](demo/QUICKSTART.md) - Start the web interface
-- **Deployment**: [`demo/DEPLOYMENT.md`](demo/DEPLOYMENT.md) - Share with others
-- **Rust Parser**: [`docs/rust-parser.md`](docs/rust-parser.md) - Building and using the verus_syn parser
-- Installation: [`docs/install.md`](docs/install.md)
-- Architecture: [`docs/lemma-search-design.md`](docs/lemma-search-design.md)
-- Configuration: [`docs/configuration.md`](docs/configuration.md)
-- Testing: [`docs/testing.md`](docs/testing.md)
-- Search tips: [`docs/search-tips.md`](docs/search-tips.md)
-- vstd integration: [`docs/vstd-integration-guide.md`](docs/vstd-integration-guide.md)
+| Topic | Link |
+|-------|------|
+| **Full Usage Guide** | [`docs/usage.md`](docs/usage.md) |
+| Web Demo | [`demo/QUICKSTART.md`](demo/QUICKSTART.md) |
+| Installation | [`docs/install.md`](docs/install.md) |
+| Rust Parser | [`docs/rust-parser.md`](docs/rust-parser.md) |
+| Architecture | [`docs/lemma-search-design.md`](docs/lemma-search-design.md) |
 
-## Project Structure
+## Example Queries
 
+**Natural language** - describe what you need:
+```bash
+uv run python -m verus_lemma_finder search "modulo is always less than divisor" data/vstd_lemma_index.json
+# → lemma_mod_bound: 0 <= x % m < m
+
+uv run python -m verus_lemma_finder search "multiplication preserves inequality" data/vstd_lemma_index.json
+# → lemma_mul_inequality: x < y && z > 0 ==> x * z < y * z
 ```
-verus_lemma_finder/
-├── src/verus_lemma_finder/      # Main Python package
-│   ├── cli.py                   # CLI entry point
-│   ├── indexing.py              # Index building
-│   ├── search.py                # Search functionality
-│   ├── normalization.py         # Query normalization
-│   ├── extraction.py            # Spec extraction (calls Rust parser)
-│   ├── models.py                # Data models
-│   ├── config.py                # Configuration
-│   └── scip_utils.py            # SCIP utilities
-├── rust/                        # Rust parser (verus_syn + PyO3)
-│   ├── Cargo.toml               # Rust dependencies
-│   └── src/lib.rs               # PyO3 bindings for verus_syn
-├── tests/                       # Test suite
-├── docs/                        # Documentation
-├── demo/                        # Web demo
-└── pyproject.toml               # Project config (maturin build)
+
+**Math notation** - variable names are normalized automatically:
+```bash
+uv run python -m verus_lemma_finder search "a * b <= c implies a <= c / b" data/vstd_lemma_index.json
+# Same results as: "x * y <= z implies x <= z / y"
 ```
 
 ## Requirements
 
 - Python 3.12+
-- `verus-analyzer` (https://github.com/verus-lang/verus-analyzer)
-- `scip` CLI tool (https://github.com/sourcegraph/scip)
-- `sentence-transformers` (installed automatically)
+- `uv` (recommended) or pip
+- Rust toolchain (for accurate Verus parsing)
 
-### Optional (for building from source)
-
-- Rust toolchain (for building the `verus_parser` module)
-- `maturin` (Python/Rust build tool)
+**For building your own indexes:**
+- `verus-analyzer` + `scip` CLI
 
 ## Architecture
 
-This project uses a **hybrid Rust + Python** approach for best of both worlds:
-
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    Verus Lemma Finder                       │
-├─────────────────────────────────────────────────────────────┤
 │  🦀 Rust (verus_syn)          │  🐍 Python                  │
 │  ─────────────────────────────│─────────────────────────────│
 │  • Accurate Verus parsing     │  • Semantic embeddings      │
 │  • AST traversal              │  • sentence-transformers    │
-│  • Spec extraction            │  • Search algorithms        │
-│  • PyO3 bindings              │  • CLI & Web interface      │
+│  • Spec extraction            │  • CLI & Web interface      │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-- **Rust + verus_syn**: Proper parsing of Verus syntax (no regex hacks!)
-- **Python + sentence-transformers**: Powerful semantic search with embeddings
+## License
 
-## Testing
-
-```bash
-# Run tests
-pytest tests/
-
-# Run specific test
-pytest tests/test_regression.py::TestDivisionFromMultiplication -v
-
-# Test Rust parser
-cd rust && cargo test
-```
-
-See [`docs/testing.md`](docs/testing.md) for details.
-
+MIT

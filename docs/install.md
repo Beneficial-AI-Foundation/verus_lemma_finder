@@ -2,305 +2,145 @@
 
 ## Quick Install
 
-### Option A: Using uv (Recommended - Fastest)
+### From Source (Recommended)
 
 ```bash
-cd ~/git_repos/baif/verus_lemma_finder
+git clone https://github.com/Beneficial-AI-Foundation/verus_lemma_finder.git
+cd verus_lemma_finder
+uv sync --extra dev
 
-# Install uv if not already installed
-# curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Install dependencies (uv handles everything)
-uv sync
-
-# Verify installation
-uv run lemma_search_tool.py --help
+# Build Rust parser for accurate Verus parsing (requires Rust toolchain)
+uv run maturin develop --release
 ```
 
-### Option B: Using pip with venv (Traditional)
+### From GitHub Release
+
+Download the wheel from [GitHub Releases](https://github.com/Beneficial-AI-Foundation/verus_lemma_finder/releases):
 
 ```bash
-cd ~/git_repos/baif/verus_lemma_finder
-
-# Create virtual environment
-python3 -m venv .venv
-
-# Activate virtual environment
-source .venv/bin/activate
-
-# Install dependencies
-pip install -e .
-
-# Verify installation
-./lemma help
+# Download and install the wheel for your platform
+pip install verus_lemma_finder-X.Y.Z-cp312-cp312-linux_x86_64.whl
 ```
+
+That's it! You can now:
+- Run the web demo: `./demo/start_demo.sh`
+- Search from CLI: `uv run python -m verus_lemma_finder search "query" data/vstd_lemma_index.json`
 
 ## Prerequisites
 
 ### Required
 
-1. **Python 3.12+**
-   ```bash
-   python3 --version
-   ```
+| Tool | Version | Check | Purpose |
+|------|---------|-------|---------|
+| Python | 3.12+ | `python3 --version` | Runtime |
+| uv | any | `uv --version` | Package management |
 
-2. **verus-analyzer** (from Verus installation)
-   ```bash
-   verus-analyzer --version
-   ```
+### For Building Your Own Indexes
 
-3. **scip CLI tool**
-   - Download from: https://github.com/sourcegraph/scip/releases
+| Tool | Check | Purpose |
+|------|-------|---------|
+| verus-analyzer | `verus-analyzer --version` | Generate SCIP from Verus code |
+| scip | `scip --version` | Convert SCIP to JSON |
 
-### Optional (but Recommended)
+**Install verus-analyzer:** https://github.com/verus-lang/verus-analyzer
 
-- **uv** (fast Python package installer)
-  ```bash
-  # Install uv
-  curl -LsSf https://astral.sh/uv/install.sh | sh
-  
-  # Verify installation
-  uv --version
-  ```
+**Install scip:** https://github.com/sourcegraph/scip/releases
 
-- **git** (for cloning vstd)
-  ```bash
-  git --version
-  ```
+### For Best Parsing Accuracy (Optional)
 
-## Step-by-Step Installation
+| Tool | Check | Purpose |
+|------|-------|---------|
+| Rust | `rustc --version` | Build verus_syn parser |
+| maturin | `maturin --version` | Python-Rust bridge |
 
-Choose your preferred method:
+## Installation Methods
 
-### Method A: Using uv (Recommended)
-
-#### 1. Navigate to Project
+### Method 1: uv (Recommended)
 
 ```bash
-cd ~/git_repos/baif/verus_lemma_finder
-```
-
-#### 2. Install uv (if not already installed)
-
-```bash
+# Install uv if needed
 curl -LsSf https://astral.sh/uv/install.sh | sh
-```
 
-#### 3. Sync Dependencies
-
-```bash
+# Clone and install
+git clone https://github.com/Beneficial-AI-Foundation/verus_lemma_finder.git
+cd verus_lemma_finder
 uv sync
 ```
 
-This will automatically:
-- Create an isolated Python environment
-- Install all required dependencies
-- Download the `all-MiniLM-L6-v2` model (~500 MB on first run)
-
-#### 4. Verify Installation
+### Method 2: pip
 
 ```bash
-uv run lemma_search_tool.py --help
-```
+git clone https://github.com/Beneficial-AI-Foundation/verus_lemma_finder.git
+cd verus_lemma_finder
 
-You should see the help message.
-
-### Method B: Using pip with venv (Traditional)
-
-#### 1. Navigate to Project
-
-```bash
-cd ~/git_repos/baif/verus_lemma_finder
-```
-
-#### 2. Create Virtual Environment
-
-```bash
 python3 -m venv .venv
-```
-
-This creates an isolated Python environment for the project dependencies.
-
-#### 3. Activate Virtual Environment
-
-**On Linux/macOS:**
-```bash
 source .venv/bin/activate
-```
-
-**On Windows:**
-```cmd
-.venv\Scripts\activate
-```
-
-You should see `(.venv)` in your terminal prompt.
-
-#### 4. Install Dependencies
-
-```bash
 pip install -e .
 ```
 
-This will install:
-- `sentence-transformers` (for semantic search)
-- `numpy` (for array operations)
+## Rust Parser
 
-**Note:** The first run will download the `all-MiniLM-L6-v2` model (~500 MB).
+The Rust parser is built automatically in the Quick Install steps above. It uses `verus_syn` for accurate Verus syntax parsing.
 
-#### 5. Verify Installation
-
+**Verify it's working:**
 ```bash
-./lemma help
+uv run python -c "import verus_parser; print('✓ Rust parser available')"
 ```
 
-You should see the help message.
+**If the Rust build fails:** The tool falls back to regex-based extraction (less accurate but functional).
 
-#### 6. Test Basic Functionality
+See [`rust-parser.md`](rust-parser.md) for details.
 
-```bash
-# Should show version and usage info
-python3 lemma_search_tool.py --help
-```
-
-## Adding to PATH (Optional)
-
-To use `lemma` from anywhere:
-
-### Temporary (current session only)
+## Verify Installation
 
 ```bash
-export PATH="$PATH:$HOME/git_repos/baif/verus_lemma_finder"
+# Check CLI works
+uv run python -m verus_lemma_finder --help
+
+# Test search with included index
+uv run python -m verus_lemma_finder search "division" data/vstd_lemma_index.json
+
+# Start web demo
+./demo/start_demo.sh
 ```
 
-### Permanent (recommended)
+## First-Time Setup Notes
 
-**For bash:**
-```bash
-echo 'export PATH="$PATH:$HOME/git_repos/baif/verus_lemma_finder"' >> ~/.bashrc
-source ~/.bashrc
-```
-
-**For zsh:**
-```bash
-echo 'export PATH="$PATH:$HOME/git_repos/baif/verus_lemma_finder"' >> ~/.zshrc
-source ~/.zshrc
-```
-
-Now you can use `lemma` from any directory!
-
-## Verification
-
-Test the installation:
-
-```bash
-# Should work from any directory (if added to PATH)
-lemma help
-
-# Or with full path
-~/git_repos/baif/verus_lemma_finder/lemma help
-```
+- **Model download:** The first search downloads the `all-MiniLM-L6-v2` model (~90 MB)
+- **Embeddings:** Pre-built indexes in `data/` include embeddings, so semantic search works immediately
 
 ## Troubleshooting
 
-### "Command not found: verus-analyzer"
-
-**Solution:** Install Verus or add it to your PATH.
+### "ModuleNotFoundError: No module named 'verus_lemma_finder'"
 
 ```bash
-# Check if Verus is installed
-which verus
+# Ensure you're in the project directory
+cd /path/to/verus_lemma_finder
 
-# If installed, add to PATH (example)
-export PATH="$PATH:/path/to/verus/source/target-verus/release"
-```
-
-### "ModuleNotFoundError: No module named 'sentence_transformers'"
-
-**Solution:** Ensure you've activated the virtual environment and installed dependencies.
-
-```bash
-source .venv/bin/activate
-pip install -e .
-```
-
-### "Virtual environment not found"
-
-**Solution:** Create the virtual environment first.
-
-```bash
-cd ~/git_repos/baif/verus_lemma_finder
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e .
-```
-
-## Usage After Installation
-
-See [README.md](README.md) for usage examples, or:
-
-### Using uv
-
-```bash
-# Quick start
-cd /path/to/your/verus/project
-
-# Generate SCIP index
-uv run lemma_search_tool.py generate-scip .
-
-# Build searchable index
-uv run lemma_search_tool.py index project_scip.json --embeddings
-
-# Search!
-uv run lemma_search_tool.py search "your query" lemma_index.json
-
-# Interactive mode
-uv run lemma_search_tool.py interactive lemma_index.json
-```
-
-### Using traditional method (with wrapper script)
-
-```bash
-# Quick start
-cd /path/to/your/verus/project
-
-# Generate SCIP index
-lemma generate-scip .
-
-# Build searchable index
-lemma reindex project_scip.json
-
-# Search!
-lemma search "your query"
-
-# Interactive mode
-lemma interactive
-```
-
-## Uninstallation
-
-To completely remove:
-
-```bash
-# Remove project directory
-rm -rf ~/git_repos/baif/verus_lemma_finder
-
-# Remove from PATH (edit ~/.bashrc or ~/.zshrc)
-# Remove the line: export PATH="$PATH:$HOME/git_repos/baif/verus_lemma_finder"
-
-# Reload shell config
-source ~/.bashrc  # or source ~/.zshrc
-```
-
-## Updating
-
-To update the tool (if using git):
-
-### Using uv
-
-```bash
-cd ~/git_repos/baif/verus_lemma_finder
-git pull
-
-# Update dependencies if requirements changed
+# Re-sync dependencies
 uv sync
 ```
+
+### "Rust parser not available" warning
+
+This is fine - the tool will use regex fallback. For best accuracy, build the Rust parser:
+
+```bash
+maturin develop --release
+```
+
+### "Command not found: verus-analyzer"
+
+Only needed if building your own indexes. Install from:
+https://github.com/verus-lang/verus-analyzer
+
+### "Command not found: scip"
+
+Only needed if building your own indexes. Download from:
+https://github.com/sourcegraph/scip/releases
+
+## Next Steps
+
+- **Try the demo:** `./demo/start_demo.sh` → http://localhost:8000
+- **Add your project:** `uv run python scripts/add_index.py`
+- **Learn more:** [`usage.md`](usage.md)

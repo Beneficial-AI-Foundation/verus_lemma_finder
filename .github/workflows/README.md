@@ -9,21 +9,24 @@ This directory contains GitHub Actions workflows for continuous integration, rel
 **Trigger:** Runs on push to main/master/develop branches and on pull requests
 
 **Jobs:**
-- **Test**: Runs tests across multiple Python versions (3.8-3.12) and operating systems (Ubuntu, macOS, Windows)
+- **Test**: Runs tests across Python 3.12-3.13 and multiple operating systems (Ubuntu, macOS, Windows)
+  - Builds Rust extension with maturin
   - Executes pytest suite
-  - Generates coverage report (on Ubuntu with Python 3.11)
+  - Generates coverage report (on Ubuntu with Python 3.12)
   - Uploads coverage to Codecov
   
-- **Lint**: Checks code quality and formatting
-  - Runs ruff check for linting
+- **Lint**: Checks Python code quality and formatting
+  - Runs ruff check for linting (`src/`, `tests/`, `scripts/`, `demo/`)
   - Runs ruff format check
-  - Runs black check (optional)
   
 - **Type Check**: Static type checking
   - Runs mypy on the source code
   
+- **Rust Lint**: Checks Rust code quality
+  - Runs clippy on the Rust extension
+  
 - **Build**: Creates distribution packages
-  - Builds wheel and source distribution
+  - Builds wheel with maturin (includes Rust extension)
   - Validates with twine
   - Uploads artifacts
 
@@ -35,7 +38,7 @@ This directory contains GitHub Actions workflows for continuous integration, rel
 
 **Jobs:**
 - **Build and Publish**: Creates release and publishes to PyPI
-  - Builds distribution packages
+  - Builds wheel with maturin
   - Publishes to PyPI (requires `PYPI_API_TOKEN` secret)
   - Creates GitHub release with release notes
   
@@ -60,9 +63,15 @@ This directory contains GitHub Actions workflows for continuous integration, rel
 
 ## Required Secrets
 
-To use all workflows, you need to configure these secrets in your GitHub repository settings:
+### For PyPI Publishing (Optional)
 
-### For PyPI Publishing:
+PyPI publishing is **optional**. If tokens are not configured, releases will still:
+- Build the wheel with Rust extension
+- Create a GitHub Release with downloadable artifacts
+
+Users can then install from the GitHub release or from source.
+
+**To enable PyPI publishing:**
 
 1. **PYPI_API_TOKEN**: PyPI API token for publishing releases
    - Go to https://pypi.org/manage/account/token/
@@ -73,19 +82,6 @@ To use all workflows, you need to configure these secrets in your GitHub reposit
    - Go to https://test.pypi.org/manage/account/token/
    - Create a new API token
    - Add it to GitHub secrets
-
-### Alternative: PyPI Trusted Publishing
-
-Instead of using API tokens, you can set up [Trusted Publishing](https://docs.pypi.org/trusted-publishers/):
-
-1. Go to your project on PyPI
-2. Add a "trusted publisher" with:
-   - Owner: your GitHub username/org
-   - Repository: verus_lemma_finder
-   - Workflow: release.yml
-   - Environment: (leave blank)
-
-Then update `release.yml` to remove the `password` parameter and uncomment the trusted publishing comment.
 
 ### For Codecov (optional):
 
@@ -115,7 +111,7 @@ CI runs automatically on:
    ```
 
 4. The release workflow will automatically:
-   - Build the package
+   - Build the wheel with Rust extension
    - Publish to PyPI
    - Create a GitHub release
 
@@ -142,29 +138,38 @@ To add support for a new Python version:
 
 1. Update `pyproject.toml` classifiers:
    ```toml
-   "Programming Language :: Python :: 3.13",
+   "Programming Language :: Python :: 3.14",
    ```
 
 2. Update the CI workflow matrix in `ci.yml`:
    ```yaml
-   python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
+   python-version: ['3.12', '3.13', '3.14']
    ```
 
-### Troubleshooting
+## Troubleshooting
 
 **Tests failing?**
 - Check the specific job logs in the Actions tab
-- Run tests locally: `pytest tests/ -v`
+- Run tests locally: `uv run pytest tests/ -v`
+- Ensure Rust extension is built: `uv run maturin develop --release`
 
 **Release failing?**
 - Verify `PYPI_API_TOKEN` is set correctly
 - Ensure version in `pyproject.toml` matches the git tag
 - Check that the version doesn't already exist on PyPI
 
-**Linting errors?**
-- Run locally: `ruff check src/ tests/`
-- Auto-fix: `ruff check --fix src/ tests/`
-- Format: `ruff format src/ tests/`
+**Python linting errors?**
+- Run locally: `uv run ruff check src/ tests/ scripts/ demo/`
+- Auto-fix: `uv run ruff check --fix src/ tests/ scripts/ demo/`
+- Format: `uv run ruff format src/ tests/ scripts/ demo/`
+
+**Rust linting errors?**
+- Run locally: `cd rust && cargo clippy`
+- Auto-fix: `cd rust && cargo clippy --fix --allow-dirty`
+
+**Build failing?**
+- Ensure Rust toolchain is installed
+- Check maturin can build: `maturin build --release`
 
 ## Best Practices
 
@@ -173,4 +178,4 @@ To add support for a new Python version:
 3. **Use semantic versioning** for releases (MAJOR.MINOR.PATCH)
 4. **Review Dependabot PRs** before auto-merging
 5. **Monitor CodeQL alerts** and address security issues promptly
-
+6. **Run both Python and Rust lints** before committing
