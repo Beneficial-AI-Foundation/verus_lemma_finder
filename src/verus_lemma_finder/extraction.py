@@ -15,6 +15,7 @@ from .config import Config, get_config
 # Try to import the Rust-based parser
 try:
     import verus_parser
+
     VERUS_PARSER_AVAILABLE = True
 except ImportError:
     VERUS_PARSER_AVAILABLE = False
@@ -45,9 +46,7 @@ class SpecExtractor:
             full_path.relative_to(repo_root_resolved)
         except ValueError:
             # Path is outside repo_root - potential security issue
-            print(
-                f"⚠️  Warning: Attempted to access file outside repo root: {file_path}"
-            )
+            print(f"⚠️  Warning: Attempted to access file outside repo root: {file_path}")
             return ""
 
         if full_path.exists() and full_path.is_file():

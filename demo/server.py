@@ -22,10 +22,12 @@ from verus_lemma_finder.search import LemmaSearcher
 
 # ==================== Data Models ====================
 
+
 class SearchRequest(BaseModel):
     query: str
     top_k: int = 10
     project: str = "dalek"  # "dalek" or future projects
+
 
 class SearchResult(BaseModel):
     name: str
@@ -39,11 +41,13 @@ class SearchResult(BaseModel):
     source: str
     github_url: str | None = None
 
+
 class SearchResponse(BaseModel):
     results: list[SearchResult]
     query: str
     total: int
     search_method: str
+
 
 # Global searcher instances (loaded on startup)
 searchers = {}
@@ -55,18 +59,19 @@ GITHUB_REPOS = {
         "url": "https://github.com/Beneficial-AI-Foundation/dalek-lite",
         "branch": "main",
         "path_prefix": "curve25519-dalek/",  # Prepend to file paths for GitHub URLs
-        "index_file": "data/curve25519-dalek_lemma_index.json"
+        "index_file": "data/curve25519-dalek_lemma_index.json",
     },
     "vstd": {
         # Verus standard library (vstd)
         "url": "https://github.com/verus-lang/verus",
         "branch": "main",
         "path_prefix": "source/vstd/",  # Prepend to file paths for GitHub URLs
-        "index_file": "data/vstd_lemma_index.json"
-    }
+        "index_file": "data/vstd_lemma_index.json",
+    },
 }
 
 # ==================== Lifespan Management ====================
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -82,7 +87,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             try:
                 searchers[project_name] = LemmaSearcher(
                     index_file=index_file,
-                    use_embeddings=True  # Full semantic search!
+                    use_embeddings=True,  # Full semantic search!
                 )
                 print(f"✓ Loaded {project_name} index")
             except Exception as e:
@@ -100,13 +105,14 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # Cleanup on shutdown (if needed)
     print("Shutting down...")
 
+
 # ==================== App Setup ====================
 
 app = FastAPI(
     title="Verus Lemma Finder API",
     description="Search for Verus lemmas and specifications",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Enable CORS for all origins (for demo purposes)
@@ -120,6 +126,7 @@ app.add_middleware(
 
 # ==================== API Endpoints ====================
 
+
 @app.get("/", response_class=HTMLResponse)
 async def root():
     """Serve the demo HTML page."""
@@ -128,17 +135,16 @@ async def root():
         return HTMLResponse(content=html_file.read_text())
     return HTMLResponse("<h1>Verus Lemma Finder Demo</h1><p>index.html not found</p>")
 
+
 @app.get("/api/health")
 async def health():
     """Health check endpoint."""
     return {
         "status": "healthy",
         "projects": list(searchers.keys()),
-        "total_lemmas": {
-            project: len(searcher.lemmas)
-            for project, searcher in searchers.items()
-        }
+        "total_lemmas": {project: len(searcher.lemmas) for project, searcher in searchers.items()},
     }
+
 
 @app.post("/api/search", response_model=SearchResponse)
 async def search(request: SearchRequest):
@@ -150,7 +156,7 @@ async def search(request: SearchRequest):
     if request.project not in searchers:
         raise HTTPException(
             status_code=404,
-            detail=f"Project '{request.project}' not found. Available: {list(searchers.keys())}"
+            detail=f"Project '{request.project}' not found. Available: {list(searchers.keys())}",
         )
 
     searcher = searchers[request.project]
@@ -177,9 +183,7 @@ async def search(request: SearchRequest):
                 file_path = path_prefix + file_path
 
             # Build URL
-            github_url = (
-                f"{github_config['url']}/blob/{github_config['branch']}/{file_path}"
-            )
+            github_url = f"{github_config['url']}/blob/{github_config['branch']}/{file_path}"
 
             # Add line number anchor if available
             if lemma.line_number:
@@ -196,7 +200,7 @@ async def search(request: SearchRequest):
                 ensures_clauses=lemma.ensures_clauses,
                 score=score,
                 source=lemma.source,
-                github_url=github_url
+                github_url=github_url,
             )
         )
 
@@ -204,8 +208,9 @@ async def search(request: SearchRequest):
         results=search_results,
         query=request.query,
         total=len(search_results),
-        search_method=search_method
+        search_method=search_method,
     )
+
 
 @app.get("/api/projects")
 async def list_projects():
@@ -216,15 +221,18 @@ async def list_projects():
                 "name": project,
                 "github_url": config["url"],
                 "lemma_count": len(searchers[project].lemmas) if project in searchers else 0,
-                "has_embeddings": searchers[project].embeddings is not None if project in searchers else False
+                "has_embeddings": searchers[project].embeddings is not None
+                if project in searchers
+                else False,
             }
             for project, config in GITHUB_REPOS.items()
         ]
     }
 
+
 # ==================== Run Instructions ====================
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
 
+    uvicorn.run(app, host="0.0.0.0", port=8000)

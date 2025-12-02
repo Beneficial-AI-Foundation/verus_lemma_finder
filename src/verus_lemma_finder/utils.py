@@ -24,10 +24,12 @@ except ImportError:
 # Runtime imports for optional dependencies - Rust parser
 try:
     import verus_parser
+
     VERUS_PARSER_AVAILABLE = True
 except ImportError:
     VERUS_PARSER_AVAILABLE = False
     verus_parser = None  # type: ignore
+
 
 class ModelCache:
     """

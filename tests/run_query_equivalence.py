@@ -19,9 +19,7 @@ from verus_lemma_finder import LemmaSearcher
 class TestCase:
     """A test case for query equivalence"""
 
-    def __init__(
-        self, name: str, queries: list[str], expected_lemma: str, position: int = 0
-    ):
+    def __init__(self, name: str, queries: list[str], expected_lemma: str, position: int = 0):
         self.name = name
         self.queries = queries
         self.expected_lemma = expected_lemma
@@ -111,9 +109,7 @@ def run_test_case(
     if verbose:
         print(f"\n{'=' * 80}")
         print(f"Test: {test_case.name}")
-        print(
-            f"Expected: '{test_case.expected_lemma}' at position {test_case.position}"
-        )
+        print(f"Expected: '{test_case.expected_lemma}' at position {test_case.position}")
         if not lemma_exists:
             print("⚠️  WARNING: Expected lemma not found in index!")
         print(f"{'=' * 80}")
@@ -144,9 +140,7 @@ def run_test_case(
             message = f"⚠️  Found at position {found_position} (expected {test_case.position}, within tolerance)"
         else:
             passed = False
-            message = (
-                f"❌ Found at position {found_position}, expected {test_case.position}"
-            )
+            message = f"❌ Found at position {found_position}, expected {test_case.position}"
 
         if verbose:
             print(f"   {message}")
@@ -169,9 +163,7 @@ def run_test_case(
     return results
 
 
-def run_all_tests(
-    index_file: Path, verbose: bool = False
-) -> tuple[int, int, list[TestResult]]:
+def run_all_tests(index_file: Path, verbose: bool = False) -> tuple[int, int, list[TestResult]]:
     """
     Run all regression tests.
 
@@ -258,21 +250,15 @@ def main():
     """Main entry point"""
     import argparse
 
-    parser = argparse.ArgumentParser(
-        description="Run regression tests for query normalization"
-    )
-    parser.add_argument(
-        "index_file", type=Path, nargs="?", help="Path to lemma index file"
-    )
+    parser = argparse.ArgumentParser(description="Run regression tests for query normalization")
+    parser.add_argument("index_file", type=Path, nargs="?", help="Path to lemma index file")
     parser.add_argument(
         "-v",
         "--verbose",
         action="store_true",
         help="Show detailed output for each query",
     )
-    parser.add_argument(
-        "--list-tests", action="store_true", help="List all test cases and exit"
-    )
+    parser.add_argument("--list-tests", action="store_true", help="List all test cases and exit")
 
     args = parser.parse_args()
 

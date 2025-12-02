@@ -5,7 +5,6 @@ Tests the QueryNormalizer class for operator normalization,
 variable normalization, and query variation generation.
 """
 
-
 from verus_lemma_finder.normalization import QueryNormalizer
 
 
@@ -322,4 +321,3 @@ class TestNormalizerConsistency:
         # Verify they both have "+" and "var" patterns
         assert "+" in result1 and "+" in result2
         assert "var1" in result1 and "var1" in result2
-

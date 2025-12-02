@@ -373,5 +373,5 @@ ls -la verus_lemma_finder.config.json
 
 ---
 
-**Questions?** Open an issue or check the [main README](../README.md).
+**Questions?** Open an issue or check the [main README](../Readme.md).
 

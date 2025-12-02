@@ -42,9 +42,7 @@ class LemmaIndexer:
         self.embeddings = None
         self.model = None
         self.source = source  # Tag for where lemmas come from
-        self.path_filter = (
-            path_filter  # Optional path prefix to filter (e.g., "source/vstd")
-        )
+        self.path_filter = path_filter  # Optional path prefix to filter (e.g., "source/vstd")
 
         # Cache for symbol -> line number mapping from SCIP occurrences
         self.symbol_line_map: dict[str, int] = {}
@@ -57,13 +55,9 @@ class LemmaIndexer:
                 self.use_embeddings = False
             else:
                 # Use cached model to avoid reloading
-                self.model = get_sentence_transformer_model(
-                    self.config.indexing.embedding_model
-                )
+                self.model = get_sentence_transformer_model(self.config.indexing.embedding_model)
 
-    def _extract_line_numbers_from_occurrences(
-        self, occurrences: list[dict]
-    ) -> dict[str, int]:
+    def _extract_line_numbers_from_occurrences(self, occurrences: list[dict]) -> dict[str, int]:
         """
         Extract line numbers from SCIP occurrences.
 
@@ -152,8 +146,8 @@ class LemmaIndexer:
         line_from_scip = line_num is not None
 
         # Extract requires/ensures from source (not available in SCIP)
-        requires, ensures, parsed_line_num = (
-            self.spec_extractor.extract_specs_for_function(file_path, name)
+        requires, ensures, parsed_line_num = self.spec_extractor.extract_specs_for_function(
+            file_path, name
         )
 
         # Use SCIP line number if available, fallback to parsed
@@ -242,9 +236,7 @@ class LemmaIndexer:
                     continue
 
                 # Create lemma from symbol
-                lemma, line_from_scip = self._create_lemma_from_symbol(
-                    symbol, doc_line_map, path
-                )
+                lemma, line_from_scip = self._create_lemma_from_symbol(symbol, doc_line_map, path)
 
                 # Track statistics
                 if line_from_scip:
@@ -297,9 +289,7 @@ def merge_indexes(
     with open(base_index_file) as f:
         base_data = json.load(f)
 
-    base_lemmas = [
-        LemmaInfo(**lemma_dict) for lemma_dict in base_data.get("lemmas", [])
-    ]
+    base_lemmas = [LemmaInfo(**lemma_dict) for lemma_dict in base_data.get("lemmas", [])]
 
     # Load base embeddings if they exist
     base_embeddings: Any | None = None

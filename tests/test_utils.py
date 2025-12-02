@@ -212,6 +212,7 @@ class TestEmbeddingsAvailable:
         """Test embeddings availability is consistent with imports"""
         try:
             import sentence_transformers  # noqa: F401
+
             # If import succeeds, flag should be True
             assert EMBEDDINGS_AVAILABLE is True
         except ImportError:
@@ -225,9 +226,7 @@ class TestEdgeCases:
     def test_validate_file_with_special_characters(self):
         """Test validation of file with special characters in name"""
         with tempfile.NamedTemporaryFile(
-            prefix="test file with spaces",
-            suffix=".json",
-            delete=False
+            prefix="test file with spaces", suffix=".json", delete=False
         ) as tmp:
             tmp_path = Path(tmp.name)
 
@@ -253,11 +252,7 @@ class TestEdgeCases:
     def test_validate_path_with_unicode(self):
         """Test validation with unicode characters in path"""
         # Create temp file with unicode in name
-        with tempfile.NamedTemporaryFile(
-            prefix="test_файл_",
-            suffix=".json",
-            delete=False
-        ) as tmp:
+        with tempfile.NamedTemporaryFile(prefix="test_файл_", suffix=".json", delete=False) as tmp:
             tmp_path = Path(tmp.name)
 
         try:
@@ -270,4 +265,3 @@ class TestEdgeCases:
         ModelCache.clear_cache()
         ModelCache.clear_cache()  # Should not error
         assert ModelCache.is_cached() is False
-

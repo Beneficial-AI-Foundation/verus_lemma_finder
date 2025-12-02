@@ -59,7 +59,7 @@ This generates SCIP, builds the index, and configures the demo server.
 | Topic | Link |
 |-------|------|
 | **Full Usage Guide** | [`docs/usage.md`](docs/usage.md) |
-| Web Demo | [`demo/QUICKSTART.md`](demo/QUICKSTART.md) |
+| Web Demo | [`demo/quickstart.md`](demo/quickstart.md) |
 | Installation | [`docs/install.md`](docs/install.md) |
 | Rust Parser | [`docs/rust-parser.md`](docs/rust-parser.md) |
 | Architecture | [`docs/lemma-search-design.md`](docs/lemma-search-design.md) |

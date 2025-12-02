@@ -1,5 +1,18 @@
 # ⚡ Web Demo Quick Start
 
+## Prerequisites
+
+**All you need:**
+- ✅ Python 3.12+                                 
+- ✅ The demo dependencies (installed automatically by the script)
+
+**You DON'T need:**
+- ❌ `verus-analyzer` (only for building indexes)
+- ❌ `scip` (only for building indexes)  
+- ❌ Rust or Verus compiler
+
+The demo uses **pre-built index files** already in the `data/` folder!
+
 ## One Command to Rule Them All
 
 ```bash
@@ -48,10 +61,10 @@ open http://localhost:8000/docs
 
 ## Try These Queries
 
-- `modular arithmetic`
-- `sequence properties`
-- `vector bounds`
-- `proving things about multiplication`
+- `modulo is always less than divisor`
+- `multiplication preserves inequality`
+- `division bounds`
+- `a * b <= c implies a <= c / b`
 
 ## Tech Stack
 
@@ -72,7 +85,8 @@ demo/
 └── quickstart.md       # This file!
 
 data/
-└── curve25519-dalek_lemma_index.*  # Pre-built indexes
+├── vstd_lemma_index.*              # Verus standard library
+└── curve25519-dalek_lemma_index.*  # curve25519-dalek project
 ```
 
 ## Why This Demo Rocks
@@ -84,22 +98,4 @@ data/
 ✅ **Production-Ready** - Can deploy as-is  
 ✅ **No Build Step** - Works immediately  
 ✅ **Extensible** - Easy to add features  
-
-## Deploy Your Demo
-
-### Fly.io (Recommended)
-```bash
-# Install Fly CLI
-curl -L https://fly.io/install.sh | sh
-
-# Login and deploy
-flyctl auth login
-flyctl launch
-```
-
-**Live Demo**: https://verus-lemma-finder.fly.dev/
-
----
-
-**Now go try it!** → `./demo/start_demo.sh` 🚀
 
