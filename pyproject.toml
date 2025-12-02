@@ -1,6 +1,6 @@
 [project]
 name = "verus-lemma-finder"
-version = "1.0.0"
+version = "1.1.0"
 description = "A semantic search tool for discovering Verus lemmas"
 readme = "Readme.md"
 requires-python = ">=3.12"
@@ -42,9 +42,9 @@ verus-lemma-finder = "verus_lemma_finder.cli:main"
 lemma-search = "verus_lemma_finder.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/verus-lang/verus"
-Documentation = "https://github.com/verus-lang/verus"
-Repository = "https://github.com/verus-lang/verus"
+Homepage = "https://github.com/Beneficial-AI-Foundation/verus_lemma_finder"
+Documentation = "https://github.com/Beneficial-AI-Foundation/verus_lemma_finder/tree/main/docs"
+Repository = "https://github.com/Beneficial-AI-Foundation/verus_lemma_finder"
 
 # Build system - use maturin for Rust extension
 [build-system]
