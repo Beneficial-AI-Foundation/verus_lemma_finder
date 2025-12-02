@@ -30,6 +30,7 @@ dev = [
     "black>=22.0.0",
     "mypy>=0.950",
     "ruff>=0.1.0",
+    "maturin>=1.4,<2.0",
 ]
 demo = [
     "fastapi>=0.109.0",
@@ -53,15 +54,14 @@ build-backend = "maturin"
 [tool.maturin]
 # Path to the Rust project
 manifest-path = "rust/Cargo.toml"
-# Python package location
+# Python package location - include verus_lemma_finder
 python-source = "src"
-# Module name - will be importable as `verus_parser`
+# Module name for the Rust extension
 module-name = "verus_parser"
 # Build features
 features = ["pyo3/extension-module"]
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/verus_lemma_finder"]
+# Include Python packages
+python-packages = ["verus_lemma_finder"]
 
 [tool.black]
 line-length = 100

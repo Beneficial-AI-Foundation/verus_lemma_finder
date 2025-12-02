@@ -5,22 +5,19 @@ Usage:
     uv run fastapi dev demo/server.py
 """
 
-import os
 import sys
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import AsyncIterator, List, Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from verus_lemma_finder.models import LemmaInfo
 from verus_lemma_finder.search import LemmaSearcher
 
 # ==================== Data Models ====================
@@ -33,17 +30,17 @@ class SearchRequest(BaseModel):
 class SearchResult(BaseModel):
     name: str
     file_path: str
-    line_number: Optional[int]
+    line_number: int | None
     documentation: str
     signature: str
-    requires_clauses: List[str]
-    ensures_clauses: List[str]
+    requires_clauses: list[str]
+    ensures_clauses: list[str]
     score: float
     source: str
-    github_url: Optional[str] = None
+    github_url: str | None = None
 
 class SearchResponse(BaseModel):
-    results: List[SearchResult]
+    results: list[SearchResult]
     query: str
     total: int
     search_method: str
@@ -54,9 +51,18 @@ searchers = {}
 # GitHub repository mappings
 GITHUB_REPOS = {
     "dalek": {
+        # The curve25519-dalek Verus port by Beneficial AI Foundation
+        "url": "https://github.com/Beneficial-AI-Foundation/dalek-lite",
+        "branch": "main",
+        "path_prefix": "curve25519-dalek/",  # Prepend to file paths for GitHub URLs
+        "index_file": "data/curve25519-dalek_lemma_index.json"
+    },
+    "vstd": {
+        # Verus standard library (vstd)
         "url": "https://github.com/verus-lang/verus",
         "branch": "main",
-        "index_file": "data/curve25519-dalek_lemma_index.json"
+        "path_prefix": "source/vstd/",  # Prepend to file paths for GitHub URLs
+        "index_file": "data/vstd_lemma_index.json"
     }
 }
 
@@ -66,12 +72,12 @@ GITHUB_REPOS = {
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     """Load indexes on startup, cleanup on shutdown."""
     print("🚀 Loading indexes...")
-    
+
     project_root = Path(__file__).parent.parent
-    
+
     for project_name, config in GITHUB_REPOS.items():
         index_file = project_root / config["index_file"]
-        
+
         if index_file.exists():
             try:
                 searchers[project_name] = LemmaSearcher(
@@ -83,14 +89,14 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
                 print(f"⚠️  Failed to load {project_name}: {e}")
         else:
             print(f"⚠️  Index not found for {project_name}: {index_file}")
-    
+
     if not searchers:
         print("⚠️  WARNING: No indexes loaded! Demo won't work properly.")
     else:
         print(f"✓ Ready with {len(searchers)} project(s)")
-    
+
     yield  # Server runs
-    
+
     # Cleanup on shutdown (if needed)
     print("Shutting down...")
 
@@ -138,36 +144,47 @@ async def health():
 async def search(request: SearchRequest):
     """
     Search for lemmas in the specified project.
-    
+
     Returns top-k results with relevance scores.
     """
     if request.project not in searchers:
         raise HTTPException(
-            status_code=404, 
+            status_code=404,
             detail=f"Project '{request.project}' not found. Available: {list(searchers.keys())}"
         )
-    
+
     searcher = searchers[request.project]
-    
+
     # Perform search
     results = searcher.search(request.query, top_k=request.top_k)
-    
+
     # Determine search method used
     search_method = "semantic+keyword" if searcher.embeddings is not None else "keyword"
-    
+
     # Convert to response format with GitHub URLs
     github_config = GITHUB_REPOS[request.project]
     search_results = []
-    
+
     for lemma, score in results:
-        # Generate GitHub URL
+        # Generate GitHub URL (even without line number)
         github_url = None
-        if lemma.file_path and lemma.line_number:
+        if lemma.file_path:
+            file_path = lemma.file_path
+
+            # Add path prefix if configured (e.g., "curve25519-dalek/" for dalek-lite repo)
+            path_prefix = github_config.get("path_prefix", "")
+            if path_prefix and not file_path.startswith(path_prefix):
+                file_path = path_prefix + file_path
+
+            # Build URL
             github_url = (
-                f"{github_config['url']}/blob/{github_config['branch']}/"
-                f"{lemma.file_path}#L{lemma.line_number}"
+                f"{github_config['url']}/blob/{github_config['branch']}/{file_path}"
             )
-        
+
+            # Add line number anchor if available
+            if lemma.line_number:
+                github_url += f"#L{lemma.line_number}"
+
         search_results.append(
             SearchResult(
                 name=lemma.name,
@@ -182,7 +199,7 @@ async def search(request: SearchRequest):
                 github_url=github_url
             )
         )
-    
+
     return SearchResponse(
         results=search_results,
         query=request.query,

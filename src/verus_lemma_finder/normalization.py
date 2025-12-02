@@ -3,7 +3,6 @@ Query normalization for improving search matching.
 """
 
 import re
-from typing import List
 
 
 class QueryNormalizer:
@@ -71,7 +70,7 @@ class QueryNormalizer:
             return query
 
         # Create consistent mapping (first var -> var1, second -> var2, etc)
-        unique_vars: List[str] = []
+        unique_vars: list[str] = []
         for v in variables_found:
             if v.lower() not in [u.lower() for u in unique_vars]:
                 unique_vars.append(v.lower())
@@ -89,7 +88,7 @@ class QueryNormalizer:
 
         return result
 
-    def generate_variations(self, query: str) -> List[str]:
+    def generate_variations(self, query: str) -> list[str]:
         """
         Generate variations of a query to handle different phrasings.
         This helps match semantically equivalent but syntactically different queries.

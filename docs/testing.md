@@ -16,7 +16,7 @@ The project includes regression tests that verify:
 
 ```bash
 # Using uv (recommended)
-uv sync
+uv sync --extra dev
 
 # Or using pip
 pip install -e ".[dev]"
@@ -26,7 +26,7 @@ pip install -e ".[dev]"
 
 ```bash
 # Run with default index (curve25519-dalek_lemma_index.json)
-uv run uv run pytest tests/test_regression.py
+uv run pytest tests/test_regression.py
 
 # Run with custom index
 uv run pytest tests/test_regression.py --index=your_index.json
@@ -86,13 +86,13 @@ If you prefer not to use pytest, there's also a standalone test script:
 
 ```bash
 # List available tests
-python tests/test_query_equivalence.py --list-tests
+uv run python tests/run_query_equivalence.py --list-tests
 
 # Run tests with default index
-python tests/test_query_equivalence.py curve25519-dalek_lemma_index.json
+uv run python tests/run_query_equivalence.py data/curve25519-dalek_lemma_index.json
 
 # Run with verbose output
-python tests/test_query_equivalence.py curve25519-dalek_lemma_index.json -v
+uv run python tests/run_query_equivalence.py data/curve25519-dalek_lemma_index.json -v
 ```
 
 ## Common Issues
@@ -101,14 +101,14 @@ python tests/test_query_equivalence.py curve25519-dalek_lemma_index.json -v
 
 If tests are failing, check:
 
-1. **Index has embeddings**: Regenerate with `--embeddings`
+1. **Index has embeddings**: Regenerate the index (embeddings are enabled by default)
    ```bash
-   uv run verus-lemma-finder index <scip_file> --embeddings -o lemma_index.json
+   uv run python -m verus_lemma_finder index <scip_file> -o lemma_index.json
    ```
 
 2. **sentence-transformers installed**: 
    ```bash
-   uv sync  # Installs all dependencies including sentence-transformers
+   uv sync --extra dev  # Installs all dependencies
    ```
 
 3. **Expected lemmas exist**: Some lemmas might not be in your project
@@ -124,7 +124,7 @@ If you see:
 ```
 
 This means either:
-- The index doesn't have embeddings (regenerate with `--embeddings`)
+- The index was built with `--no-embeddings`
 - sentence-transformers is not installed
 
 Tests may still pass but with lower accuracy.
@@ -191,7 +191,7 @@ To check test coverage:
 
 ```bash
 # Install with dev dependencies (includes pytest-cov)
-uv sync
+uv sync --extra dev
 
 # Run tests with coverage
 uv run pytest tests/test_regression.py --cov=verus_lemma_finder --cov-report=html
@@ -225,7 +225,7 @@ open htmlcov/index.html
 # Quick reference for common commands:
 
 # Install dependencies
-uv sync
+uv sync --extra dev
 
 # Run all tests
 uv run pytest tests/test_regression.py
@@ -240,6 +240,6 @@ uv run pytest tests/test_regression.py::TestDivisionFromMultiplication
 uv run pytest -v tests/test_regression.py
 
 # Run without pytest (standalone)
-uv run python tests/test_query_equivalence.py lemma_index.json -v
+uv run python tests/run_query_equivalence.py data/vstd_lemma_index.json -v
 ```
 

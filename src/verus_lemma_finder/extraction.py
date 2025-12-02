@@ -9,7 +9,6 @@ with a regex-based fallback for when the Rust module isn't available.
 import re
 from functools import lru_cache
 from pathlib import Path
-from typing import List, Optional, Tuple
 
 from .config import Config, get_config
 
@@ -24,7 +23,7 @@ except ImportError:
 class SpecExtractor:
     """Extract requires/ensures clauses from Verus source files"""
 
-    def __init__(self, repo_root: Path, config: Optional[Config] = None):
+    def __init__(self, repo_root: Path, config: Config | None = None):
         self.repo_root = repo_root
         self.config = config if config is not None else get_config()
         # Create a bound method for the cached file reader
@@ -66,13 +65,13 @@ class SpecExtractor:
 
     def extract_specs_for_function(
         self, file_path: str, function_name: str
-    ) -> Tuple[List[str], List[str], Optional[int]]:
+    ) -> tuple[list[str], list[str], int | None]:
         """
         Extract requires and ensures clauses for a function.
-        
+
         Uses verus_parser (Rust + verus_syn) for accurate parsing if available,
         falls back to regex-based extraction otherwise.
-        
+
         Returns: (requires_list, ensures_list, line_number)
         """
         # Validate inputs
@@ -88,42 +87,42 @@ class SpecExtractor:
         # Try Rust-based parser first (more accurate)
         if VERUS_PARSER_AVAILABLE:
             return self._extract_specs_with_verus_parser(content, function_name)
-        
+
         # Fallback to regex-based extraction
         return self._extract_specs_with_regex(content, function_name)
-    
+
     def _extract_specs_with_verus_parser(
         self, content: str, function_name: str
-    ) -> Tuple[List[str], List[str], Optional[int]]:
+    ) -> tuple[list[str], list[str], int | None]:
         """
         Extract specs using the Rust verus_parser module.
-        
+
         This uses verus_syn for proper AST-based parsing of Verus syntax.
         """
         try:
             specs = verus_parser.extract_function_specs(content, function_name)
-            
+
             # Check for errors
             if specs.get("parse_error"):
                 # Fall back to regex on parse error
                 return self._extract_specs_with_regex(content, function_name)
-            
+
             requires = specs.get("requires", [])
             ensures = specs.get("ensures", [])
             line_number = specs.get("line_number")
-            
+
             return requires, ensures, line_number
-            
+
         except Exception:
             # On any error, fall back to regex
             return self._extract_specs_with_regex(content, function_name)
-    
+
     def _extract_specs_with_regex(
         self, content: str, function_name: str
-    ) -> Tuple[List[str], List[str], Optional[int]]:
+    ) -> tuple[list[str], list[str], int | None]:
         """
         Extract specs using regex-based parsing (fallback method).
-        
+
         This is less accurate but works without the Rust module.
         """
         # Find the function definition
@@ -155,7 +154,7 @@ class SpecExtractor:
 
         return requires, ensures, line_number
 
-    def _extract_clauses(self, text: str, keyword: str) -> List[str]:
+    def _extract_clauses(self, text: str, keyword: str) -> list[str]:
         """Extract requires or ensures clauses"""
         clauses = []
 

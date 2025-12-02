@@ -5,7 +5,6 @@ Command-line interface for the lemma search tool.
 import argparse
 import sys
 from pathlib import Path
-from typing import Optional, Tuple
 
 from .indexing import LemmaIndexer, merge_indexes
 from .scip_utils import clone_verus_repo, generate_scip_json
@@ -45,7 +44,7 @@ def cmd_setup_vstd(args: argparse.Namespace) -> int:
     return 0
 
 
-def _validate_vstd_input_files(verus_scip: Path, base_index: Path, verus_root: Path) -> Optional[int]:
+def _validate_vstd_input_files(verus_scip: Path, base_index: Path, verus_root: Path) -> int | None:
     """
     Validate that required input files exist for vstd indexing.
 
@@ -67,14 +66,14 @@ def _validate_vstd_input_files(verus_scip: Path, base_index: Path, verus_root: P
         print(f"❌ Error: Base index not found: {base_index}")
         print("\nCreate it first with:")
         print(
-            "  uv run python -m verus_lemma_finder index <your_project_scip>.json --embeddings"
+            "  uv run python -m verus_lemma_finder index <your_project_scip>.json"
         )
         return 1
 
     return None
 
 
-def _check_embeddings_compatibility(base_index: Path) -> Tuple[bool, bool]:
+def _check_embeddings_compatibility(base_index: Path) -> tuple[bool, bool]:
     """
     Check if base index uses embeddings and if embeddings are available.
 
@@ -197,7 +196,7 @@ def cmd_generate_scip(args: argparse.Namespace) -> int:
         print("✅ SCIP JSON generation complete!")
         print("=" * 70)
         print("\nNext step: Build lemma index with:")
-        print(f"  uv run python -m verus_lemma_finder index {output_file} --embeddings")
+        print(f"  uv run python -m verus_lemma_finder index {output_file}")
         return 0
     else:
         print()
@@ -370,14 +369,10 @@ def create_parser() -> argparse.ArgumentParser:
         "-r", "--repo-root", help="Repository root (default: SCIP file directory)"
     )
     index_parser.add_argument(
-        "--embeddings",
-        action="store_true",
-        help="Compute semantic embeddings (requires sentence-transformers)",
-    )
-    index_parser.add_argument(
         "--no-embeddings",
         dest="embeddings",
         action="store_false",
+        default=True,
         help="Skip computing embeddings (keyword search only)",
     )
     index_parser.add_argument(

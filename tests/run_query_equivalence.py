@@ -9,7 +9,6 @@ mathematical notation, and implication order.
 
 import sys
 from pathlib import Path
-from typing import List, Optional, Tuple
 
 # Add parent directory to path for src layout
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -21,7 +20,7 @@ class TestCase:
     """A test case for query equivalence"""
 
     def __init__(
-        self, name: str, queries: List[str], expected_lemma: str, position: int = 0
+        self, name: str, queries: list[str], expected_lemma: str, position: int = 0
     ):
         self.name = name
         self.queries = queries
@@ -86,7 +85,7 @@ class TestResult:
         test_case: TestCase,
         query: str,
         passed: bool,
-        actual_position: Optional[int] = None,
+        actual_position: int | None = None,
         message: str = "",
     ):
         self.test_case = test_case
@@ -98,7 +97,7 @@ class TestResult:
 
 def run_test_case(
     searcher: LemmaSearcher, test_case: TestCase, verbose: bool = False
-) -> List[TestResult]:
+) -> list[TestResult]:
     """
     Run a single test case with all its query variations.
 
@@ -172,7 +171,7 @@ def run_test_case(
 
 def run_all_tests(
     index_file: Path, verbose: bool = False
-) -> Tuple[int, int, List[TestResult]]:
+) -> tuple[int, int, list[TestResult]]:
     """
     Run all regression tests.
 
@@ -208,7 +207,7 @@ def run_all_tests(
     return passed, total, all_results
 
 
-def print_summary(passed: int, total: int, all_results: List[TestResult]):
+def print_summary(passed: int, total: int, all_results: list[TestResult]):
     """Print test summary"""
     print(f"\n{'=' * 80}")
     print("TEST SUMMARY")

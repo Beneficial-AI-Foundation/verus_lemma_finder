@@ -28,39 +28,50 @@ jobs:
       with:
         python-version: '3.12'
 
+    - name: Set up Rust
+      uses: dtolnay/rust-action@stable
+
     - name: Install uv
       uses: astral-sh/setup-uv@v3
 
     - name: Install build tools
       run: |
-        uv pip install --system build hatchling twine
+        uv pip install --system maturin twine
 
-    - name: Build package
+    - name: Build wheel with maturin
       run: |
-        uv run python -m build
+        maturin build --release
 
     - name: Check distribution
       run: |
-        uv run twine check dist/*
+        twine check target/wheels/*
 
     - name: List distribution files
       run: |
-        ls -lh dist/
+        ls -lh target/wheels/
 
     - name: Publish to PyPI
-      if: startsWith(github.ref, 'refs/tags/v')
+      if: startsWith(github.ref, 'refs/tags/v') && env.PYPI_TOKEN != ''
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
+        packages-dir: target/wheels/
         password: ${{ secrets.PYPI_API_TOKEN }}
-        # Uncomment below to use trusted publishing (no token needed)
-        # Remove the password line above if using trusted publishing
-        # skip_existing: true
+      env:
+        PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+
+    - name: Skip PyPI (no token configured)
+      if: startsWith(github.ref, 'refs/tags/v') && env.PYPI_TOKEN == ''
+      run: |
+        echo "⚠️ PYPI_API_TOKEN not configured - skipping PyPI publish"
+        echo "   Wheel is available in the GitHub Release artifacts"
+      env:
+        PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
 
     - name: Create GitHub Release
       if: startsWith(github.ref, 'refs/tags/v')
       uses: softprops/action-gh-release@v2
       with:
-        files: dist/*
+        files: target/wheels/*
         generate_release_notes: true
         draft: false
         prerelease: false
@@ -83,22 +94,36 @@ jobs:
       with:
         python-version: '3.12'
 
+    - name: Set up Rust
+      uses: dtolnay/rust-action@stable
+
     - name: Install uv
       uses: astral-sh/setup-uv@v3
 
     - name: Install build tools
       run: |
-        uv pip install --system build hatchling twine
+        uv pip install --system maturin twine
 
-    - name: Build package
+    - name: Build wheel with maturin
       run: |
-        uv run python -m build
+        maturin build --release
 
     - name: Publish to TestPyPI
+      if: env.TEST_PYPI_TOKEN != ''
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
+        packages-dir: target/wheels/
         repository-url: https://test.pypi.org/legacy/
         password: ${{ secrets.TEST_PYPI_API_TOKEN }}
         skip-existing: true
+      env:
+        TEST_PYPI_TOKEN: ${{ secrets.TEST_PYPI_API_TOKEN }}
+
+    - name: Skip TestPyPI (no token configured)
+      if: env.TEST_PYPI_TOKEN == ''
+      run: |
+        echo "⚠️ TEST_PYPI_API_TOKEN not configured - skipping TestPyPI publish"
+      env:
+        TEST_PYPI_TOKEN: ${{ secrets.TEST_PYPI_API_TOKEN }}
 
                                                                                                                                                                                                                                                 

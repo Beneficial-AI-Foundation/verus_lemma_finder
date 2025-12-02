@@ -10,6 +10,9 @@
 //! - Functions inside `verus!` macros
 //! - Nested modules
 
+// Suppress false positive from PyO3 macro expansion
+#![allow(clippy::useless_conversion)]
+
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use serde::{Deserialize, Serialize};
