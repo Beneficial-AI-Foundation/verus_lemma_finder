@@ -90,6 +90,12 @@ uv run python -m verus_lemma_finder search "a * b <= c implies a <= c / b" data/
 **For building your own indexes:**
 - `verus-analyzer` + `scip` CLI
 
+## Built With
+
+- [sentence-transformers](https://www.sbert.net/) - semantic embeddings
+- [verus_syn](https://crates.io/crates/verus_syn) - accurate Verus parsing
+- [PyO3](https://pyo3.rs/) - Rust-Python bindings
+
 ## Architecture
 
 ```
