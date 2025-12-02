@@ -45,9 +45,20 @@ Homepage = "https://github.com/verus-lang/verus"
 Documentation = "https://github.com/verus-lang/verus"
 Repository = "https://github.com/verus-lang/verus"
 
+# Build system - use maturin for Rust extension
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["maturin>=1.4,<2.0"]
+build-backend = "maturin"
+
+[tool.maturin]
+# Path to the Rust project
+manifest-path = "rust/Cargo.toml"
+# Python package location
+python-source = "src"
+# Module name - will be importable as `verus_parser`
+module-name = "verus_parser"
+# Build features
+features = ["pyo3/extension-module"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/verus_lemma_finder"]

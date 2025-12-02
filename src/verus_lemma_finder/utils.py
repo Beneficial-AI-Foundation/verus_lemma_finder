@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     import numpy as np
     from sentence_transformers import SentenceTransformer
 
-# Runtime imports for optional dependencies
+# Runtime imports for optional dependencies - embeddings
 try:
     import numpy as np
     from sentence_transformers import SentenceTransformer
@@ -20,6 +20,14 @@ except ImportError:
     EMBEDDINGS_AVAILABLE = False
     SentenceTransformer = None  # type: ignore
     np = None  # type: ignore
+
+# Runtime imports for optional dependencies - Rust parser
+try:
+    import verus_parser
+    VERUS_PARSER_AVAILABLE = True
+except ImportError:
+    VERUS_PARSER_AVAILABLE = False
+    verus_parser = None  # type: ignore
 
 class ModelCache:
     """
