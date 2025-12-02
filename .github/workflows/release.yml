@@ -3,11 +3,11 @@ name: Release
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to release (e.g., 1.0.0)'
+        description: "Version to release (e.g., 1.0.0)"
         required: true
 
 jobs:
@@ -16,67 +16,67 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      id-token: write  # Required for trusted publishing to PyPI
+      id-token: write # Required for trusted publishing to PyPI
 
     steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.12'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-    - name: Set up Rust
-      uses: dtolnay/rust-toolchain@stable
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
 
-    - name: Install uv
-      uses: astral-sh/setup-uv@v3
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
 
-    - name: Install build tools
-      run: |
-        uv pip install --system maturin twine
+      - name: Install build tools
+        run: |
+          uv sync --extra dev
 
-    - name: Build wheel with maturin
-      run: |
-        maturin build --release
+      - name: Build wheel with maturin
+        run: |
+          uv run maturin build --release
 
-    - name: Check distribution
-      run: |
-        twine check target/wheels/*
+      - name: Check distribution
+        run: |
+          uv run twine check target/wheels/*
 
-    - name: List distribution files
-      run: |
-        ls -lh target/wheels/
+      - name: List distribution files
+        run: |
+          ls -lh target/wheels/
 
-    - name: Publish to PyPI
-      if: startsWith(github.ref, 'refs/tags/v') && env.PYPI_TOKEN != ''
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        packages-dir: target/wheels/
-        password: ${{ secrets.PYPI_API_TOKEN }}
-      env:
-        PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+      - name: Publish to PyPI
+        if: startsWith(github.ref, 'refs/tags/v') && env.PYPI_TOKEN != ''
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: target/wheels/
+          password: ${{ secrets.PYPI_API_TOKEN }}
+        env:
+          PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
 
-    - name: Skip PyPI (no token configured)
-      if: startsWith(github.ref, 'refs/tags/v') && env.PYPI_TOKEN == ''
-      run: |
-        echo "⚠️ PYPI_API_TOKEN not configured - skipping PyPI publish"
-        echo "   Wheel is available in the GitHub Release artifacts"
-      env:
-        PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+      - name: Skip PyPI (no token configured)
+        if: startsWith(github.ref, 'refs/tags/v') && env.PYPI_TOKEN == ''
+        run: |
+          echo "⚠️ PYPI_API_TOKEN not configured - skipping PyPI publish"
+          echo "   Wheel is available in the GitHub Release artifacts"
+        env:
+          PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
 
-    - name: Create GitHub Release
-      if: startsWith(github.ref, 'refs/tags/v')
-      uses: softprops/action-gh-release@v2
-      with:
-        files: target/wheels/*
-        generate_release_notes: true
-        draft: false
-        prerelease: false
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: target/wheels/*
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # Optional: publish to TestPyPI for testing
   test-publish:
@@ -87,43 +87,41 @@ jobs:
       id-token: write
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.12'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-    - name: Set up Rust
-      uses: dtolnay/rust-toolchain@stable
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
 
-    - name: Install uv
-      uses: astral-sh/setup-uv@v3
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
 
-    - name: Install build tools
-      run: |
-        uv pip install --system maturin twine
+      - name: Install build tools
+        run: |
+          uv sync --extra dev
 
-    - name: Build wheel with maturin
-      run: |
-        maturin build --release
+      - name: Build wheel with maturin
+        run: |
+          uv run maturin build --release
 
-    - name: Publish to TestPyPI
-      if: env.TEST_PYPI_TOKEN != ''
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        packages-dir: target/wheels/
-        repository-url: https://test.pypi.org/legacy/
-        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-        skip-existing: true
-      env:
-        TEST_PYPI_TOKEN: ${{ secrets.TEST_PYPI_API_TOKEN }}
+      - name: Publish to TestPyPI
+        if: env.TEST_PYPI_TOKEN != ''
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: target/wheels/
+          repository-url: https://test.pypi.org/legacy/
+          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          skip-existing: true
+        env:
+          TEST_PYPI_TOKEN: ${{ secrets.TEST_PYPI_API_TOKEN }}
 
-    - name: Skip TestPyPI (no token configured)
-      if: env.TEST_PYPI_TOKEN == ''
-      run: |
-        echo "⚠️ TEST_PYPI_API_TOKEN not configured - skipping TestPyPI publish"
-      env:
-        TEST_PYPI_TOKEN: ${{ secrets.TEST_PYPI_API_TOKEN }}
-
-                                                                                                                                                                                                                                                
+      - name: Skip TestPyPI (no token configured)
+        if: env.TEST_PYPI_TOKEN == ''
+        run: |
+          echo "⚠️ TEST_PYPI_API_TOKEN not configured - skipping TestPyPI publish"
+        env:
+          TEST_PYPI_TOKEN: ${{ secrets.TEST_PYPI_API_TOKEN }}
