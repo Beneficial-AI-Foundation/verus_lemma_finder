@@ -15,11 +15,29 @@ Example usage:
     indexer = LemmaIndexer("scip_data.json", ".", use_embeddings=True)
     indexer.build_index()
     indexer.save_index("lemma_index.json")
+
+    # Simple API for finding similar lemmas (recommended for integration)
+    from verus_lemma_finder import get_similar_lemmas, load_searcher
+
+    results = get_similar_lemmas("lemma_mod_bound", index_path="lemma_index.json")
+
+    # Find lemmas similar to an existing lemma (by name)
+    from verus_lemma_finder import get_similar_to_lemma
+
+    results = get_similar_to_lemma("lemma_mod_bound", index_path="lemma_index.json")
 """
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 # Public API
+from .api import (
+    SimilarLemma,
+    get_similar_lemmas,
+    get_similar_lemmas_dict,
+    get_similar_to_lemma,
+    get_similar_to_lemma_dict,
+    load_searcher,
+)
 from .config import (
     Config,
     ExtractionConfig,
@@ -37,6 +55,13 @@ from .search import LemmaSearcher
 from .utils import ModelCache
 
 __all__ = [
+    # Simple API (recommended for integration)
+    "get_similar_lemmas",
+    "get_similar_lemmas_dict",
+    "get_similar_to_lemma",
+    "get_similar_to_lemma_dict",
+    "load_searcher",
+    "SimilarLemma",
     # Core classes
     "LemmaInfo",
     "LemmaSearcher",
