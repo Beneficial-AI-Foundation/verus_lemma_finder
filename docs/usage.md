@@ -9,6 +9,8 @@ Detailed guide for using verus_lemma_finder.
 | Add new project index | `uv run python scripts/add_index.py` |
 | Search lemmas | `uv run python -m verus_lemma_finder search "query" index.json` |
 | Find similar lemmas | `uv run python -m verus_lemma_finder similar lemma_name index.json` |
+| Detect duplicates | `uv run python -m verus_lemma_finder detect-duplicates index.json` |
+| Fill specs from vstd | `uv run python -m verus_lemma_finder fill-specs index.json vstd_index.json` |
 | Interactive mode | `uv run python -m verus_lemma_finder interactive index.json` |
 | Start web demo | `./demo/start_demo.sh` |
 
@@ -155,10 +157,13 @@ uv run python -m verus_lemma_finder index <scip_file> [options]
 
 Options:
   -o, --output FILE      Output index file (default: lemma_index.json)
+  -r, --repo-root PATH   Repository root (default: SCIP file directory)
   --no-embeddings        Skip embeddings (keyword search only; embeddings enabled by default)
-  --source-root PATH     Root path for source files
-  --path-filter PREFIX   Only index files starting with this prefix
+  --fill-from FILE       Fill empty specs from a reference index (default: vstd if found)
+  --no-fill              Don't fill from vstd (skip default vstd fill)
 ```
+
+**Note**: By default, the index command automatically fills empty specs from `data/vstd_lemma_index.json` if it exists. This is useful because all Verus projects use vstd, and the vstd index has complete specs for standard library lemmas. Use `--no-fill` to disable this behavior.
 
 ### `search` - Search lemmas
 
@@ -229,6 +234,57 @@ Options:
   -k, --top-k N          Similar lemmas per node (default: 3)
 ```
 
+### `detect-duplicates` - Find redundant lemmas
+
+Detect duplicate and redundant lemmas using semantic similarity + structural comparison.
+
+```bash
+uv run python -m verus_lemma_finder detect-duplicates <index_file> [options]
+
+Options:
+  -t, --threshold FLOAT  Cosine similarity threshold (default: 0.75)
+  -o, --output FILE      Save JSON report to file
+  --similar              Also report high-similarity pairs (potential refactoring)
+  --similar-threshold    Threshold for similar patterns (default: 0.90)
+```
+
+Finds two types of redundancy:
+- **EXACT**: Same requires and ensures clauses
+- **SUBSUMES**: Same ensures, but one lemma has weaker (fewer) requires
+
+See [Duplicate Detection](duplicate-detection.md) for algorithm details and findings.
+
+### `fill-specs` - Fill empty specs from a reference index
+
+When indexing a project that uses vstd lemmas, the specs (requires/ensures) for those lemmas may not be extractable from the project's source code. This command fills those gaps by looking up missing specs from a reference index (e.g., the vstd index).
+
+**Note**: The `index` command now fills from vstd by default, so you typically don't need this command unless post-processing an existing index.
+
+```bash
+uv run python -m verus_lemma_finder fill-specs <index_file> <reference_index> [options]
+
+Options:
+  -o, --output FILE      Output file (default: overwrites input)
+```
+
+Example:
+```bash
+# Post-process an existing index (if vstd fill was skipped during creation)
+uv run python -m verus_lemma_finder fill-specs \
+    data/curve25519-dalek_lemma_index.json \
+    data/vstd_lemma_index.json
+
+# Fill from a custom reference (e.g., a shared library index)
+uv run python -m verus_lemma_finder fill-specs \
+    my_project_index.json \
+    shared_library_index.json
+```
+
+This is useful because:
+- Project indexes may reference vstd lemmas without their full definitions
+- The vstd index has complete specs for standard library lemmas
+- Merging gives you the best of both: project locations + full specs
+
 ## Query Tips
 
 ### Natural Language Works
@@ -288,6 +344,7 @@ cd rust && maturin develop --release
 ## See Also
 
 - [Python API Reference](api.md)
+- [Duplicate Detection](duplicate-detection.md)
 - [Installation Guide](install.md)
 - [Search Tips](search-tips.md)
 - [Rust Parser Details](rust-parser.md)

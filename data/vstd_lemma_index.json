@@ -4,45 +4,56 @@
   "lemmas": [
     {
       "name": "all_spec_ensures",
-      "file_path": "vstd.rs",
-      "line_number": null,
+      "file_path": "compute.rs",
+      "line_number": 29,
       "documentation": "",
       "signature": "pub fn all_spec_ensures(r: Range<int>, p: spec_fn(int) -> bool)",
       "requires_clauses": [],
-      "ensures_clauses": [],
+      "ensures_clauses": [
+        "# [trigger] r . all_spec (p) ==> (forall | i | r . start <= i < r . end ==> # [trigger] p (i))"
+      ],
       "symbol_id": "rust-analyzer cargo vstd 0.0.0-2025-11-30-0053 compute/all_spec_ensures().",
       "source": "vstd"
     },
     {
       "name": "lemma_mul_by_zero_is_zero",
-      "file_path": "arithmetic/overflow.rs",
-      "line_number": null,
+      "file_path": "arithmetic/mul.rs",
+      "line_number": 110,
       "documentation": "Proof that any integer multiplied by 0 results in a product of 0.",
       "signature": "pub fn lemma_mul_by_zero_is_zero(x: int)",
       "requires_clauses": [],
-      "ensures_clauses": [],
+      "ensures_clauses": [
+        "x * 0 == 0 && 0 * x == 0"
+      ],
       "symbol_id": "rust-analyzer cargo vstd 0.0.0-2025-11-30-0053 mul/arithmetic/lemma_mul_by_zero_is_zero().",
       "source": "vstd"
     },
     {
       "name": "lemma_mul_inequality",
-      "file_path": "arithmetic/overflow.rs",
-      "line_number": null,
+      "file_path": "arithmetic/mul.rs",
+      "line_number": 164,
       "documentation": "Proof that, since `x <= y` and `z >= 0`, `x * z <= y * z`.",
       "signature": "pub fn lemma_mul_inequality(x: int, y: int, z: int)",
-      "requires_clauses": [],
-      "ensures_clauses": [],
+      "requires_clauses": [
+        "x <= y",
+        "z >= 0"
+      ],
+      "ensures_clauses": [
+        "# [trigger] (x * z) <= # [trigger] (y * z)"
+      ],
       "symbol_id": "rust-analyzer cargo vstd 0.0.0-2025-11-30-0053 mul/arithmetic/lemma_mul_inequality().",
       "source": "vstd"
     },
     {
       "name": "lemma_mul_is_commutative",
-      "file_path": "arithmetic/overflow.rs",
-      "line_number": null,
+      "file_path": "arithmetic/mul.rs",
+      "line_number": 134,
       "documentation": "Proof that multiplication is commutative, specifically that\n`x * y == y * x`.",
       "signature": "pub fn lemma_mul_is_commutative(x: int, y: int)",
       "requires_clauses": [],
-      "ensures_clauses": [],
+      "ensures_clauses": [
+        "# [trigger] (x * y) == y * x"
+      ],
       "symbol_id": "rust-analyzer cargo vstd 0.0.0-2025-11-30-0053 mul/arithmetic/lemma_mul_is_commutative().",
       "source": "vstd"
     },
@@ -89,12 +100,17 @@
     },
     {
       "name": "lemma_mul_induction_auto",
-      "file_path": "arithmetic/mul.rs",
-      "line_number": null,
+      "file_path": "arithmetic/internals/mul_internals.rs",
+      "line_number": 184,
       "documentation": "This utility function helps prove a mathematical property by\ninduction. The caller supplies an integer predicate `f`, proves\nthe predicate holds in the base case of 0, and proves correctness\nof inductive steps both upward and downward from the base case.\nThis lemma invokes induction to establish that the predicate holds\nfor the given integer `x`.\n\nTo prove inductive steps upward from the base case, the caller\nmust establish that, for any `i`, `is_le(0, i)` implies `f(i) ==>\nf(i + 1)`.\n\nTo prove inductive steps downward from the base case, the caller\nmust establish that, for any `i`, `is_le(i, 0)` implies `f(i) ==>\nf(i - 1)`.",
       "signature": "pub fn lemma_mul_induction_auto(x: int, f: spec_fn(int) -> bool)",
-      "requires_clauses": [],
-      "ensures_clauses": [],
+      "requires_clauses": [
+        "mul_auto () ==> { &&& f (0) &&& (forall | i | # [trigger] is_le (0 , i) && f (i) ==> f (i + 1)) &&& (forall | i | # [trigger] is_le (i , 0) && f (i) ==> f (i - 1)) }"
+      ],
+      "ensures_clauses": [
+        "mul_auto ()",
+        "f (x)"
+      ],
       "symbol_id": "rust-analyzer cargo vstd 0.0.0-2025-11-30-0053 mul_internals/internals/arithmetic/lemma_mul_induction_auto().",
       "source": "vstd"
     },
@@ -181,21 +197,21 @@
     },
     {
       "name": "lemma_mul_nonzero",
-      "file_path": "arithmetic/mul.rs",
-      "line_number": 101,
+      "file_path": "arithmetic/internals/mul_internals_nonlinear.rs",
+      "line_number": 35,
       "documentation": "Proof that `x` and `y` are both nonzero if and only if `x * y` is nonzero",
       "signature": "pub fn lemma_mul_nonzero(x: int, y: int)",
       "requires_clauses": [],
       "ensures_clauses": [
-        "# [trigger] (x * y) != 0 <==> x != 0 && y != 0"
+        "x * y != 0 <==> x != 0 && y != 0"
       ],
       "symbol_id": "rust-analyzer cargo vstd 0.0.0-2025-11-30-0053 mul_internals_nonlinear/internals/arithmetic/lemma_mul_nonzero().",
       "source": "vstd"
     },
     {
       "name": "lemma_mul_is_associative",
-      "file_path": "arithmetic/mul.rs",
-      "line_number": 121,
+      "file_path": "arithmetic/internals/mul_internals_nonlinear.rs",
+      "line_number": 45,
       "documentation": "Proof that multiplication is associative in this specific case,\ni.e., that `x * y * z` is the same no matter which of the two\nmultiplications is done first",
       "signature": "pub fn lemma_mul_is_associative(x: int, y: int, z: int)",
       "requires_clauses": [],
@@ -224,8 +240,8 @@
     },
     {
       "name": "lemma_mul_ordering",
-      "file_path": "arithmetic/mul.rs",
-      "line_number": 140,
+      "file_path": "arithmetic/internals/mul_internals_nonlinear.rs",
+      "line_number": 64,
       "documentation": "Proof that the if the product of two nonzero integers `x` and `y`\nis nonnegative, then it's greater than or equal to each of `x` and\n`y`",
       "signature": "pub fn lemma_mul_ordering(x: int, y: int)",
       "requires_clauses": [
@@ -234,7 +250,7 @@
         "0 <= x * y"
       ],
       "ensures_clauses": [
-        "# [trigger] (x * y) >= x && x * y >= y"
+        "x * y >= x && x * y >= y"
       ],
       "symbol_id": "rust-analyzer cargo vstd 0.0.0-2025-11-30-0053 mul_internals_nonlinear/internals/arithmetic/lemma_mul_ordering().",
       "source": "vstd"
@@ -257,8 +273,8 @@
     },
     {
       "name": "lemma_mul_strict_inequality",
-      "file_path": "arithmetic/mul.rs",
-      "line_number": 174,
+      "file_path": "arithmetic/internals/mul_internals_nonlinear.rs",
+      "line_number": 78,
       "documentation": "Proof that multiplying by a positive integer preserves inequality\nin this specific case, i.e., that since `x < y` and `z > 0` we can\nconclude that `x * z < y * z`.",
       "signature": "pub fn lemma_mul_strict_inequality(x: int, y: int, z: int)",
       "requires_clauses": [
@@ -266,7 +282,7 @@
         "z > 0"
       ],
       "ensures_clauses": [
-        "# [trigger] (x * z) < # [trigger] (y * z)"
+        "x * z < y * z"
       ],
       "symbol_id": "rust-analyzer cargo vstd 0.0.0-2025-11-30-0053 mul_internals_nonlinear/internals/arithmetic/lemma_mul_strict_inequality().",
       "source": "vstd"
@@ -386,13 +402,13 @@
     },
     {
       "name": "lemma_mul_is_distributive_add",
-      "file_path": "arithmetic/mul.rs",
-      "line_number": 269,
+      "file_path": "arithmetic/internals/mul_internals_nonlinear.rs",
+      "line_number": 54,
       "documentation": "Proof that multiplication distributes over addition in this\nspecific case, i.e., that `x * (y + z)` equals `x * y` plus `x * z`",
       "signature": "pub fn lemma_mul_is_distributive_add(x: int, y: int, z: int)",
       "requires_clauses": [],
       "ensures_clauses": [
-        "# [trigger] (x * (y + z)) == x * y + x * z"
+        "x * (y + z) == x * y + x * z"
       ],
       "symbol_id": "rust-analyzer cargo vstd 0.0.0-2025-11-30-0053 mul_internals_nonlinear/internals/arithmetic/lemma_mul_is_distributive_add().",
       "source": "vstd"
@@ -471,13 +487,13 @@
     },
     {
       "name": "lemma_mul_strictly_positive",
-      "file_path": "arithmetic/mul.rs",
-      "line_number": 342,
+      "file_path": "arithmetic/internals/mul_internals_nonlinear.rs",
+      "line_number": 27,
       "documentation": "Proof that multiplying two positive integers `x` and `y` will result in a positive integer",
       "signature": "pub fn lemma_mul_strictly_positive(x: int, y: int)",
       "requires_clauses": [],
       "ensures_clauses": [
-        "(0 < x && 0 < y) ==> (0 < # [trigger] (x * y))"
+        "(0 < x && 0 < y) ==> (0 < x * y)"
       ],
       "symbol_id": "rust-analyzer cargo vstd 0.0.0-2025-11-30-0053 mul_internals_nonlinear/internals/arithmetic/lemma_mul_strictly_positive().",
       "source": "vstd"
@@ -585,45 +601,62 @@
     },
     {
       "name": "lemma_pow_positive",
-      "file_path": "arithmetic/power2.rs",
-      "line_number": null,
+      "file_path": "arithmetic/power.rs",
+      "line_number": 122,
       "documentation": "Proof that taking the given positive integer `b` to the power of\nthe given natural number `n` produces a positive result.",
       "signature": "pub fn lemma_pow_positive(b: int, e: nat)",
-      "requires_clauses": [],
-      "ensures_clauses": [],
+      "requires_clauses": [
+        "b > 0"
+      ],
+      "ensures_clauses": [
+        "0 < # [trigger] pow (b , e)"
+      ],
       "symbol_id": "rust-analyzer cargo vstd 0.0.0-2025-11-30-0053 power/arithmetic/lemma_pow_positive().",
       "source": "vstd"
     },
     {
       "name": "lemma_pow_adds",
-      "file_path": "arithmetic/power2.rs",
-      "line_number": null,
+      "file_path": "arithmetic/power.rs",
+      "line_number": 138,
       "documentation": "Proof that taking an integer `b` to the power of the sum of two\nnatural numbers `e1` and `e2` is equivalent to multiplying `b` to\nthe power of `e1` by `b` to the power of `e2`.",
       "signature": "pub fn lemma_pow_adds(b: int, e1: nat, e2: nat)",
       "requires_clauses": [],
-      "ensures_clauses": [],
+      "ensures_clauses": [
+        "# [trigger] pow (b , e1 + e2) == pow (b , e1) * pow (b , e2)"
+      ],
       "symbol_id": "rust-analyzer cargo vstd 0.0.0-2025-11-30-0053 power/arithmetic/lemma_pow_adds().",
       "source": "vstd"
     },
     {
       "name": "lemma_pow_strictly_increases",
-      "file_path": "arithmetic/power2.rs",
-      "line_number": null,
+      "file_path": "arithmetic/power.rs",
+      "line_number": 339,
       "documentation": "Proof that a number greater than 1 raised to a power strictly\nincreases as the power strictly increases. Specifically, given\nthat `b > 1` and `e1 < e2`, we can conclude that `pow(b, e1) <\npow(b, e2)`.",
       "signature": "pub fn lemma_pow_strictly_increases(b: nat, e1: nat, e2: nat)",
-      "requires_clauses": [],
-      "ensures_clauses": [],
+      "requires_clauses": [
+        "1 < b",
+        "e1 < e2"
+      ],
+      "ensures_clauses": [
+        "# [trigger] pow (b as int , e1) < # [trigger] pow (b as int , e2)"
+      ],
       "symbol_id": "rust-analyzer cargo vstd 0.0.0-2025-11-30-0053 power/arithmetic/lemma_pow_strictly_increases().",
       "source": "vstd"
     },
     {
       "name": "lemma_pow_subtracts",
-      "file_path": "arithmetic/power2.rs",
-      "line_number": null,
+      "file_path": "arithmetic/power.rs",
+      "line_number": 192,
       "documentation": "Proof that, as long as `e1 <= e2`, taking a positive integer `b`\nto the power of `e2 - e1` is equivalent to dividing `b` to the\npower of `e2` by `b` to the power of `e1`.",
       "signature": "pub fn lemma_pow_subtracts(b: int, e1: nat, e2: nat)",
-      "requires_clauses": [],
-      "ensures_clauses": [],
+      "requires_clauses": [
+        "b > 0",
+        "e1 <= e2"
+      ],
+      "ensures_clauses": [
+        "pow (b , e1) > 0",
+        "# [trigger] pow (b , (e2 - e1) as nat) == pow (b , e2) / pow (b , e1) > 0"
+      ],
       "symbol_id": "rust-analyzer cargo vstd 0.0.0-2025-11-30-0053 power/arithmetic/lemma_pow_subtracts().",
       "source": "vstd"
     },
@@ -898,12 +931,16 @@
     },
     {
       "name": "lemma_fundamental_div_mod",
-      "file_path": "arithmetic/power.rs",
-      "line_number": null,
+      "file_path": "arithmetic/div_mod.rs",
+      "line_number": 489,
       "documentation": "Proof of the fundamental theorem of division and modulo, namely\nthat `x` can be expressed as `d` times the quotient `x / d` plus\nthe remainder `x % d`.",
       "signature": "pub fn lemma_fundamental_div_mod(x: int, d: int)",
-      "requires_clauses": [],
-      "ensures_clauses": [],
+      "requires_clauses": [
+        "d != 0"
+      ],
+      "ensures_clauses": [
+        "x == # [trigger] (d * (x / d) + (x % d))"
+      ],
       "symbol_id": "rust-analyzer cargo vstd 0.0.0-2025-11-30-0053 div_mod/arithmetic/lemma_fundamental_div_mod().",
       "source": "vstd"
     },
@@ -925,12 +962,16 @@
     },
     {
       "name": "lemma_mod_multiples_basic",
-      "file_path": "arithmetic/power.rs",
-      "line_number": null,
+      "file_path": "arithmetic/div_mod.rs",
+      "line_number": 1065,
       "documentation": "Proof that multiplying by a number then dividing by that same\nnumber produces a remainder of 0. Specifically, `(x * m) % m == 0`.",
       "signature": "pub fn lemma_mod_multiples_basic(x: int, m: int)",
-      "requires_clauses": [],
-      "ensures_clauses": [],
+      "requires_clauses": [
+        "m > 0"
+      ],
+      "ensures_clauses": [
+        "# [trigger] ((x * m) % m) == 0"
+      ],
       "symbol_id": "rust-analyzer cargo vstd 0.0.0-2025-11-30-0053 div_mod/arithmetic/lemma_mod_multiples_basic().",
       "source": "vstd"
     },
@@ -951,45 +992,64 @@
     },
     {
       "name": "lemma_div_pos_is_pos",
-      "file_path": "arithmetic/logarithm.rs",
-      "line_number": null,
+      "file_path": "arithmetic/div_mod.rs",
+      "line_number": 242,
       "documentation": "Proof that dividing a whole number by a natural number will result\nin a quotient that is greater than or equal to 0. Specifically,\n`x / d >= 0`.",
       "signature": "pub fn lemma_div_pos_is_pos(x: int, d: int)",
-      "requires_clauses": [],
-      "ensures_clauses": [],
+      "requires_clauses": [
+        "0 <= x",
+        "0 < d"
+      ],
+      "ensures_clauses": [
+        "0 <= # [trigger] (x / d)"
+      ],
       "symbol_id": "rust-analyzer cargo vstd 0.0.0-2025-11-30-0053 div_mod/arithmetic/lemma_div_pos_is_pos().",
       "source": "vstd"
     },
     {
       "name": "lemma_div_decreases",
-      "file_path": "arithmetic/logarithm.rs",
-      "line_number": null,
+      "file_path": "arithmetic/div_mod.rs",
+      "line_number": 337,
       "documentation": "Proof that dividing an integer by 2 or more results in a quotient\nthat is smaller than the original dividend. Specifically, `x / d < x`.",
       "signature": "pub fn lemma_div_decreases(x: int, d: int)",
-      "requires_clauses": [],
-      "ensures_clauses": [],
+      "requires_clauses": [
+        "0 < x",
+        "1 < d"
+      ],
+      "ensures_clauses": [
+        "# [trigger] (x / d) < x"
+      ],
       "symbol_id": "rust-analyzer cargo vstd 0.0.0-2025-11-30-0053 div_mod/arithmetic/lemma_div_decreases().",
       "source": "vstd"
     },
     {
       "name": "lemma_div_is_ordered",
-      "file_path": "arithmetic/logarithm.rs",
-      "line_number": null,
+      "file_path": "arithmetic/div_mod.rs",
+      "line_number": 309,
       "documentation": "Proof that numerical order is preserved when dividing two seperate\nintegers by a common positive divisor. Specifically, given that\n`z > 0` and `x <= y`, we know `x / z <= y / z`.",
       "signature": "pub fn lemma_div_is_ordered(x: int, y: int, z: int)",
-      "requires_clauses": [],
-      "ensures_clauses": [],
+      "requires_clauses": [
+        "x <= y",
+        "0 < z"
+      ],
+      "ensures_clauses": [
+        "# [trigger] (x / z) <= # [trigger] (y / z)"
+      ],
       "symbol_id": "rust-analyzer cargo vstd 0.0.0-2025-11-30-0053 div_mod/arithmetic/lemma_div_is_ordered().",
       "source": "vstd"
     },
     {
       "name": "lemma_div_multiples_vanish",
-      "file_path": "arithmetic/logarithm.rs",
-      "line_number": null,
+      "file_path": "arithmetic/div_mod.rs",
+      "line_number": 775,
       "documentation": "Proof that multiplying an integer by a common numerator and\ndenominator results in the original integer. Specifically,\n`(d * x) / d == x`.",
       "signature": "pub fn lemma_div_multiples_vanish(x: int, d: int)",
-      "requires_clauses": [],
-      "ensures_clauses": [],
+      "requires_clauses": [
+        "0 < d"
+      ],
+      "ensures_clauses": [
+        "(d * x) / d == x"
+      ],
       "symbol_id": "rust-analyzer cargo vstd 0.0.0-2025-11-30-0053 div_mod/arithmetic/lemma_div_multiples_vanish().",
       "source": "vstd"
     },
@@ -3152,12 +3212,16 @@
     },
     {
       "name": "axiom_set_remove_len",
-      "file_path": "set_lib.rs",
-      "line_number": null,
+      "file_path": "set.rs",
+      "line_number": 947,
       "documentation": "The result of removing an element `a` from a finite set `s` has length\n`s.len() - 1` if `a` is in `s` and length `s.len()` otherwise.",
       "signature": "pub fn axiom_set_remove_len<A>(s: Set<A>, a: A)",
-      "requires_clauses": [],
-      "ensures_clauses": [],
+      "requires_clauses": [
+        "s . finite ()"
+      ],
+      "ensures_clauses": [
+        "s . len () == # [trigger] s . remove (a) . len () + (if s . contains (a) { 1int } else { 0 })"
+      ],
       "symbol_id": "rust-analyzer cargo vstd 0.0.0-2025-11-30-0053 set/axiom_set_remove_len().",
       "source": "vstd"
     },
@@ -3511,12 +3575,17 @@
     },
     {
       "name": "lemma_submap_of_trans",
-      "file_path": "tokens/map.rs",
-      "line_number": null,
+      "file_path": "map_lib.rs",
+      "line_number": 736,
       "documentation": "submap_of (<=) is transitive.",
       "signature": "pub fn lemma_submap_of_trans<K, V>(m1: Map<K, V>, m2: Map<K, V>, m3: Map<K, V>)",
-      "requires_clauses": [],
-      "ensures_clauses": [],
+      "requires_clauses": [
+        "# [trigger] m1 . submap_of (m2)",
+        "# [trigger] m2 . submap_of (m3)"
+      ],
+      "ensures_clauses": [
+        "m1 . submap_of (m3)"
+      ],
       "symbol_id": "rust-analyzer cargo vstd 0.0.0-2025-11-30-0053 map_lib/lemma_submap_of_trans().",
       "source": "vstd"
     },
@@ -4659,12 +4728,37 @@
     },
     {
       "name": "lemma_seq_properties",
-      "file_path": "map_lib.rs",
-      "line_number": null,
+      "file_path": "seq_lib.rs",
+      "line_number": 3542,
       "documentation": "Properties of sequences from the Dafny prelude (which were axioms in Dafny, but proven here in Verus)",
       "signature": "pub fn lemma_seq_properties<A>()",
       "requires_clauses": [],
-      "ensures_clauses": [],
+      "ensures_clauses": [
+        "forall | s : Seq < A > , x : A | s . contains (x) <==> exists | i : int | 0 <= i < s . len () && # [trigger] s [i] == x",
+        "forall | x : A | ! (# [trigger] Seq :: < A > :: empty () . contains (x))",
+        "forall | s : Seq < A > | # [trigger] s . len () == 0 ==> s =~= Seq :: < A > :: empty ()",
+        "forall | x : Seq < A > , y : Seq < A > , elt : A | # [trigger] (x + y) . contains (elt) <==> x . contains (elt) || y . contains (elt)",
+        "forall | s : Seq < A > , v : A , x : A | # [trigger] s . push (v) . contains (x) <==> v == x || s . contains (x)",
+        "forall | s : Seq < A > , start : int , stop : int , x : A | (0 <= start <= stop <= s . len () && # [trigger] s . subrange (start , stop) . contains (x)) <==> (exists | i : int | 0 <= start <= i < stop <= s . len () && # [trigger] s [i] == x)",
+        "forall | s : Seq < A > , n : int | 0 <= n <= s . len () ==> # [trigger] s . take (n) . len () == n",
+        "forall | s : Seq < A > , n : int , x : A | (# [trigger] s . take (n) . contains (x) && 0 <= n <= s . len ()) <==> (exists | i : int | 0 <= i < n <= s . len () && # [trigger] s [i] == x)",
+        "forall | s : Seq < A > , n : int , j : int | 0 <= j < n <= s . len () ==> # [trigger] s . take (n) [j] == s [j]",
+        "forall | s : Seq < A > , n : int | 0 <= n <= s . len () ==> # [trigger] s . skip (n) . len () == s . len () - n",
+        "forall | s : Seq < A > , n : int , x : A | (# [trigger] s . skip (n) . contains (x) && 0 <= n <= s . len ()) <==> (exists | i : int | 0 <= n <= i < s . len () && # [trigger] s [i] == x)",
+        "forall | s : Seq < A > , n : int , j : int | 0 <= n && 0 <= j < (s . len () - n) ==> # [trigger] s . skip (n) [j] == s [j + n]",
+        "forall | a : Seq < A > , b : Seq < A > , n : int | # ! [trigger (a + b) . take (n)] # ! [trigger (a + b) . skip (n)] n == a . len () ==> ((a + b) . take (n) =~= a && (a + b) . skip (n) =~= b)",
+        "forall | s : Seq < A > , i : int , v : A , n : int | 0 <= i < n <= s . len () ==> # [trigger] s . update (i , v) . take (n) == s . take (n) . update (i , v)",
+        "forall | s : Seq < A > , i : int , v : A , n : int | 0 <= n <= i < s . len () ==> # [trigger] s . update (i , v) . take (n) == s . take (n)",
+        "forall | s : Seq < A > , i : int , v : A , n : int | 0 <= n <= i < s . len () ==> # [trigger] s . update (i , v) . skip (n) == s . skip (n) . update (i - n , v ,)",
+        "forall | s : Seq < A > , i : int , v : A , n : int | 0 <= i < n <= s . len () ==> # [trigger] s . update (i , v) . skip (n) == s . skip (n)",
+        "forall | s : Seq < A > , v : A , n : int | 0 <= n <= s . len () ==> # [trigger] s . push (v) . skip (n) == s . skip (n) . push (v)",
+        "forall | s : Seq < A > , n : int | n == 0 ==> # [trigger] s . skip (n) == s",
+        "forall | s : Seq < A > , n : int | n == 0 ==> # [trigger] s . take (n) == Seq :: < A > :: empty ()",
+        "forall | s : Seq < A > , m : int , n : int | (0 <= m && 0 <= n && m + n <= s . len ()) ==> # [trigger] s . skip (m) . skip (n) == s . skip (m + n ,)",
+        "forall | s : Seq < A > , a : A | # [trigger] (s . push (a) . to_multiset ()) =~= s . to_multiset () . insert (a)",
+        "forall | s : Seq < A > | s . len () == # [trigger] s . to_multiset () . len ()",
+        "forall | s : Seq < A > , a : A | s . contains (a) <==> # [trigger] s . to_multiset () . count (a) > 0"
+      ],
       "symbol_id": "rust-analyzer cargo vstd 0.0.0-2025-11-30-0053 seq_lib/lemma_seq_properties().",
       "source": "vstd"
     },

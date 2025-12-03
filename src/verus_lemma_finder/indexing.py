@@ -46,6 +46,8 @@ class LemmaIndexer:
 
         # Cache for symbol -> line number mapping from SCIP occurrences
         self.symbol_line_map: dict[str, int] = {}
+        # Cache for symbol -> definition file path (built from occurrences with symbol_roles == 1)
+        self.symbol_def_file_map: dict[str, str] = {}
 
         if use_embeddings:
             if not EMBEDDINGS_AVAILABLE:
@@ -57,12 +59,41 @@ class LemmaIndexer:
                 # Use cached model to avoid reloading
                 self.model = get_sentence_transformer_model(self.config.indexing.embedding_model)
 
+    def _build_symbol_definition_map(self, documents: list[dict]) -> None:
+        """
+        Pre-pass: Build a global map of symbol -> definition file path.
+
+        This is the authoritative source for file paths, not the symbols array.
+        A symbol's definition location is where symbol_roles == 1 in occurrences.
+        """
+        for doc in documents:
+            doc_path = doc.get("relative_path", "")
+            occurrences = doc.get("occurrences", [])
+
+            for occ in occurrences:
+                symbol_id = occ.get("symbol", "")
+                symbol_roles = occ.get("symbol_roles", 0)
+                range_data = occ.get("range", [])
+
+                # symbol_roles == 1 means this is a definition (not a reference)
+                if symbol_roles == self.config.indexing.scip_definition_role:
+                    self.symbol_def_file_map[symbol_id] = doc_path
+                    # Also store line number
+                    if range_data:
+                        line_number = range_data[0] + 1
+                        self.symbol_line_map[symbol_id] = line_number
+
+        print(f"  Pre-pass: Found {len(self.symbol_def_file_map)} symbol definitions")
+
     def _extract_line_numbers_from_occurrences(self, occurrences: list[dict]) -> dict[str, int]:
         """
-        Extract line numbers from SCIP occurrences.
+        Extract line numbers from SCIP occurrences for a single document.
 
         Returns a mapping of symbol_id -> line_number (1-indexed)
         Filters for definitions only (symbol_roles == 1)
+
+        Note: This is now supplementary to the global symbol_line_map built by
+        _build_symbol_definition_map().
         """
         line_map = {}
         for occ in occurrences:
@@ -127,7 +158,7 @@ class LemmaIndexer:
 
         Args:
             symbol: Symbol dictionary from SCIP data
-            doc_line_map: Mapping of symbol_id to line numbers
+            doc_line_map: Mapping of symbol_id to line numbers (per-document)
             default_path: Default file path if not in signature
 
         Returns:
@@ -139,10 +170,17 @@ class LemmaIndexer:
 
         sig_doc = symbol.get("signature_documentation", {})
         signature = sig_doc.get("text", "")
-        file_path = sig_doc.get("relative_path", default_path)
 
-        # Get line number from SCIP occurrences (faster and more reliable!)
-        line_num = doc_line_map.get(symbol_id)
+        # IMPORTANT: Use the DEFINITION location from pre-pass, not signature_documentation
+        # The signature_documentation.relative_path often points to where the symbol is
+        # used/re-exported, not where it's defined.
+        file_path = self.symbol_def_file_map.get(symbol_id)
+        if not file_path:
+            # Fallback to signature_documentation or default
+            file_path = sig_doc.get("relative_path", default_path)
+
+        # Get line number from global map (built during pre-pass), then doc-level map
+        line_num = self.symbol_line_map.get(symbol_id) or doc_line_map.get(symbol_id)
         line_from_scip = line_num is not None
 
         # Extract requires/ensures from source (not available in SCIP)
@@ -212,6 +250,10 @@ class LemmaIndexer:
         documents = scip_data.get("documents", [])
         print(f"Found {len(documents)} documents")
 
+        # Pre-pass: Build global symbol -> definition file map
+        # This is the authoritative source for file paths
+        self._build_symbol_definition_map(documents)
+
         lemma_count = 0
         line_nums_from_scip = 0
         line_nums_from_parsing = 0
@@ -276,6 +318,62 @@ class LemmaIndexer:
             print(f"Saved embeddings to {embeddings_file}")
             print(f"  Shape: {self.embeddings.shape}")
             print(f"  Size: {embeddings_file.stat().st_size / 1024 / 1024:.1f} MB")
+
+
+def fill_empty_specs_from_reference(
+    lemmas: list[LemmaInfo],
+    reference_index_file: Path,
+) -> tuple[list[LemmaInfo], int]:
+    """
+    Fill empty requires/ensures from a reference index (e.g., vstd).
+
+    When a lemma has no specs but exists in the reference index with specs,
+    copy the specs from the reference.
+
+    Args:
+        lemmas: List of lemmas to potentially fill
+        reference_index_file: Path to reference index (e.g., vstd_lemma_index.json)
+
+    Returns:
+        Tuple of (updated lemmas list, count of lemmas filled)
+    """
+    # Load reference index
+    with open(reference_index_file) as f:
+        ref_data = json.load(f)
+
+    # Build lookup by name, preferring entries with specs (some lemmas appear
+    # multiple times - once from definition with specs, once from import without)
+    ref_by_name = {}
+    for lemma_dict in ref_data.get("lemmas", []):
+        ref_lemma = LemmaInfo(**lemma_dict)
+        existing = ref_by_name.get(ref_lemma.name)
+        if existing is None:
+            ref_by_name[ref_lemma.name] = ref_lemma
+        elif ref_lemma.ensures_clauses or ref_lemma.requires_clauses:
+            # New entry has specs - prefer it over existing (which might not have specs)
+            ref_by_name[ref_lemma.name] = ref_lemma
+        # Otherwise keep existing (it might already have specs)
+
+    filled_count = 0
+    updated_lemmas = []
+
+    for lemma in lemmas:
+        # Check if lemma has empty specs and exists in reference
+        if not lemma.ensures_clauses and not lemma.requires_clauses and lemma.name in ref_by_name:
+            ref_lemma = ref_by_name[lemma.name]
+            if ref_lemma.ensures_clauses or ref_lemma.requires_clauses:
+                # Fill from reference
+                lemma.requires_clauses = ref_lemma.requires_clauses
+                lemma.ensures_clauses = ref_lemma.ensures_clauses
+                # Keep original file_path and line_number (from the project)
+                # but add documentation if missing
+                if not lemma.documentation and ref_lemma.documentation:
+                    lemma.documentation = ref_lemma.documentation
+                filled_count += 1
+
+        updated_lemmas.append(lemma)
+
+    return updated_lemmas, filled_count
 
 
 def merge_indexes(

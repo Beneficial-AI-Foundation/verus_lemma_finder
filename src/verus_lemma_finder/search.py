@@ -256,8 +256,6 @@ class LemmaSearcher:
         results = self.search(query, top_k + 1)
 
         # Filter out the source lemma itself
-        filtered_results = [
-            (lemma, score) for lemma, score in results if lemma.name != lemma_name
-        ]
+        filtered_results = [(lemma, score) for lemma, score in results if lemma.name != lemma_name]
 
         return filtered_results[:top_k]
