@@ -5,8 +5,10 @@ Semantic search for Verus lemmas. Find lemmas using natural language queries.
 ## ✨ Highlights
 
 - **Semantic search** - find lemmas by meaning, not just keywords
+- **Similar lemma discovery** - find lemmas similar to a known lemma
+- **Duplicate detection** - find redundant lemmas in your codebase
 - **Proper Verus parsing** with `verus_syn` - accurate `requires`/`ensures`/`decreases` extraction
-- **Web interface** for easy exploration
+- **Web interface** for easy search exploration
 - **Query normalization** - variable names and math operators are normalized
 
 ## Quick Start
@@ -20,17 +22,19 @@ uv sync --extra dev
 uv run maturin develop --release
 ```
 
-### Web Demo
+### Web Demo (Search Only)
 
 ```bash
 ./demo/start_demo.sh
 ```
 
-Open http://localhost:8000 and search!
+Open http://localhost:8000 and search! The web interface provides an easy way to explore lemmas. For other features (similar lemmas, duplicate detection), use the CLI.
 
-**Included indexes** (in `data/`):
-- `vstd_lemma_index.json` - Verus standard library 
-- `curve25519-dalek_lemma_index.json` - [curve25519-dalek](https://github.com/Beneficial-AI-Foundation/dalek-lite)
+**Included indexes** (in `data/`, generated December 2025):
+- `vstd_lemma_index.json` - Verus standard library (417 lemmas, 94% with specs)
+- `curve25519-dalek_lemma_index.json` - [curve25519-dalek](https://github.com/Beneficial-AI-Foundation/dalek-lite) (354 lemmas, 90% with specs)
+
+> **Note**: These indexes may become outdated. See [Add Your Own Project](#add-your-own-project) to regenerate them or add new projects.
 
 ### CLI Search
 
@@ -40,6 +44,9 @@ uv run python -m verus_lemma_finder search "dividing both sides preserves inequa
 
 # Find lemmas similar to a known lemma
 uv run python -m verus_lemma_finder similar lemma_mod_adds data/vstd_lemma_index.json
+
+# Detect redundant lemmas
+uv run python -m verus_lemma_finder detect-duplicates data/vstd_lemma_index.json
 
 # Interactive mode
 uv run python -m verus_lemma_finder interactive data/vstd_lemma_index.json
@@ -59,6 +66,8 @@ results = get_similar_to_lemma("lemma_mod_adds", index_path="data/vstd_lemma_ind
 
 ## Add Your Own Project
 
+> **Prerequisites**: Requires `verus-analyzer` and `scip` CLI. See [`docs/install.md`](docs/install.md) for setup instructions.
+
 ```bash
 # Interactive (recommended)
 uv run python scripts/add_index.py
@@ -75,6 +84,7 @@ This generates SCIP, builds the index, and configures the demo server.
 |-------|------|
 | **Full Usage Guide** | [`docs/usage.md`](docs/usage.md) |
 | **Python API** | [`docs/api.md`](docs/api.md) |
+| **Duplicate Detection** | [`docs/duplicate-detection.md`](docs/duplicate-detection.md) |
 | Web Demo | [`demo/quickstart.md`](demo/quickstart.md) |
 | Installation | [`docs/install.md`](docs/install.md) |
 | Rust Parser | [`docs/rust-parser.md`](docs/rust-parser.md) |
