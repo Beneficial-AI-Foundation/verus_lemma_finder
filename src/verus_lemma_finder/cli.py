@@ -274,6 +274,54 @@ def cmd_search(args: argparse.Namespace) -> int:
         return 1
 
 
+def cmd_similar(args: argparse.Namespace) -> int:
+    """Find lemmas similar to a given lemma (by name). Returns exit code (0 for success, non-zero for failure)."""
+    index_file = Path(args.index_file)
+    lemma_name = args.lemma_name
+
+    if not index_file.exists():
+        print(f"❌ Error: Index file not found: {index_file}")
+        return 1
+
+    try:
+        searcher = LemmaSearcher(index_file)
+        
+        # Look up the source lemma
+        source_lemma = searcher.get_lemma_by_name(lemma_name)
+        if source_lemma is None:
+            print(f"❌ Error: Lemma '{lemma_name}' not found in index")
+            print("\nTip: Use 'search' command to find lemmas by query:")
+            print(f"  uv run python -m verus_lemma_finder search \"{lemma_name}\" {index_file}")
+            return 1
+
+        # Show source lemma info
+        print(f"\n📋 Source lemma: {source_lemma.name}")
+        print(f"   📦 {source_lemma.file_path}" + (f":{source_lemma.line_number}" if source_lemma.line_number else ""))
+        if source_lemma.documentation:
+            print(f"   💬 {source_lemma.documentation[:100]}{'...' if len(source_lemma.documentation) > 100 else ''}")
+        print()
+
+        # Find similar lemmas
+        results = searcher.find_similar_lemmas(lemma_name, top_k=args.top_k)
+
+        if not results:
+            print("No similar lemmas found.")
+            return 0
+
+        print(f"🔍 Found {len(results)} similar lemmas:\n")
+        print("=" * 80)
+
+        for i, (lemma, score) in enumerate(results, 1):
+            print(f"\n[{i}] Score: {score:.3f}")
+            print(lemma.to_display())
+            print("-" * 80)
+
+        return 0
+    except Exception as e:
+        print(f"❌ Error during search: {e}")
+        return 1
+
+
 def cmd_interactive(args: argparse.Namespace) -> int:
     """Interactive search mode. Returns exit code (0 for success, non-zero for failure)."""
     index_file = Path(args.index_file)
@@ -333,6 +381,126 @@ def cmd_interactive(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_enrich_graph(args: argparse.Namespace) -> int:
+    """
+    Enrich a call graph JSON with similar lemmas for each node.
+    
+    Returns exit code (0 for success, non-zero for failure).
+    """
+    import json
+    
+    graph_file = Path(args.graph_file)
+    index_file = Path(args.index_file)
+    output_file = Path(args.output) if args.output else graph_file
+    top_k = args.top_k
+    
+    print("=" * 70)
+    print("🔗 Enriching call graph with similar lemmas")
+    print("=" * 70)
+    print()
+    
+    # Validate input files
+    if not graph_file.exists():
+        print(f"❌ Error: Graph file not found: {graph_file}")
+        return 1
+    
+    if not index_file.exists():
+        print(f"❌ Error: Lemma index file not found: {index_file}")
+        return 1
+    
+    # Load the graph
+    print(f"📂 Loading graph from: {graph_file}")
+    try:
+        with open(graph_file) as f:
+            graph = json.load(f)
+    except json.JSONDecodeError as e:
+        print(f"❌ Error parsing graph JSON: {e}")
+        return 1
+    
+    nodes = graph.get("nodes", [])
+    print(f"   Found {len(nodes)} nodes")
+    
+    # Load the lemma searcher
+    print(f"📂 Loading lemma index from: {index_file}")
+    try:
+        searcher = LemmaSearcher(index_file, use_embeddings=True)
+    except Exception as e:
+        print(f"❌ Error loading lemma index: {e}")
+        return 1
+    
+    print()
+    print(f"🔍 Finding top {top_k} similar lemmas for each node...")
+    print()
+    
+    # Process each node
+    enriched_count = 0
+    for i, node in enumerate(nodes):
+        # Use display_name as the query
+        display_name = node.get("display_name", "")
+        if not display_name:
+            continue
+        
+        # Also include body snippet if available for better matching
+        body = node.get("body", "")
+        query = display_name
+        if body:
+            # Use first few lines of body for context
+            body_lines = body.split('\n')[:5]
+            query = f"{display_name} {' '.join(body_lines)}"
+        
+        # Search for similar lemmas
+        results = searcher.search(query, top_k=top_k + 1)  # +1 to exclude self
+        
+        # Build similar_lemmas list, excluding the node itself
+        similar_lemmas = []
+        for lemma, score in results:
+            # Skip if it's the same lemma (by name)
+            if lemma.name == display_name:
+                continue
+            
+            similar_lemmas.append({
+                "name": lemma.name,
+                "score": round(score, 3),
+                "file_path": lemma.file_path,
+                "line_number": lemma.line_number,
+                "signature": lemma.signature,
+            })
+            
+            if len(similar_lemmas) >= top_k:
+                break
+        
+        # Add to node
+        if similar_lemmas:
+            node["similar_lemmas"] = similar_lemmas
+            enriched_count += 1
+        
+        # Progress indicator
+        if (i + 1) % 100 == 0 or i + 1 == len(nodes):
+            print(f"   Processed {i + 1}/{len(nodes)} nodes...", end='\r')
+    
+    print()
+    print()
+    
+    # Save the enriched graph
+    print(f"💾 Saving enriched graph to: {output_file}")
+    try:
+        with open(output_file, 'w') as f:
+            json.dump(graph, f, indent=2)
+    except Exception as e:
+        print(f"❌ Error saving graph: {e}")
+        return 1
+    
+    print()
+    print("=" * 70)
+    print("✅ Graph enrichment complete!")
+    print("=" * 70)
+    print(f"\n   Nodes processed: {len(nodes)}")
+    print(f"   Nodes with similar lemmas: {enriched_count}")
+    print(f"   Output: {output_file}")
+    
+    return 0
+
+
 def create_parser() -> argparse.ArgumentParser:
     """Create the argument parser"""
     parser = argparse.ArgumentParser(description="Semantic lemma search for Verus")
@@ -379,6 +547,20 @@ def create_parser() -> argparse.ArgumentParser:
         "-k", "--top-k", type=int, default=10, help="Number of results (default: 10)"
     )
 
+    # Similar command - find lemmas similar to a given lemma
+    similar_parser = subparsers.add_parser(
+        "similar",
+        help="Find lemmas similar to a given lemma (by name)"
+    )
+    similar_parser.add_argument(
+        "lemma_name",
+        help="Name of the lemma to find similar lemmas for"
+    )
+    similar_parser.add_argument("index_file", help="Path to lemma index file")
+    similar_parser.add_argument(
+        "-k", "--top-k", type=int, default=5, help="Number of results (default: 5)"
+    )
+
     # Interactive command
     interactive_parser = subparsers.add_parser("interactive", help="Interactive search mode")
     interactive_parser.add_argument("index_file", help="Path to lemma index file")
@@ -407,6 +589,30 @@ def create_parser() -> argparse.ArgumentParser:
         help="Verus repository root (default: SCIP file directory)",
     )
 
+    # Enrich graph command
+    enrich_parser = subparsers.add_parser(
+        "enrich-graph",
+        help="Enrich a call graph JSON with similar lemmas for each node"
+    )
+    enrich_parser.add_argument(
+        "graph_file",
+        help="Path to the call graph JSON file (from scip-callgraph)"
+    )
+    enrich_parser.add_argument(
+        "index_file",
+        help="Path to the lemma index file"
+    )
+    enrich_parser.add_argument(
+        "-o", "--output",
+        help="Output file (default: overwrites input graph)"
+    )
+    enrich_parser.add_argument(
+        "-k", "--top-k",
+        type=int,
+        default=3,
+        help="Number of similar lemmas per node (default: 3)"
+    )
+
     return parser
 
 
@@ -421,9 +627,13 @@ def main() -> None:
         sys.exit(cmd_index(args))
     elif args.command == "search":
         sys.exit(cmd_search(args))
+    elif args.command == "similar":
+        sys.exit(cmd_similar(args))
     elif args.command == "interactive":
         sys.exit(cmd_interactive(args))
     elif args.command == "setup-vstd":
         sys.exit(cmd_setup_vstd(args))
     elif args.command == "add-vstd":
         sys.exit(cmd_add_vstd(args))
+    elif args.command == "enrich-graph":
+        sys.exit(cmd_enrich_graph(args))

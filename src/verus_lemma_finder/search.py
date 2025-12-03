@@ -209,3 +209,55 @@ class LemmaSearcher:
     def search(self, query: str, top_k: int = 10) -> list[tuple[LemmaInfo, float]]:
         """Alias for fuzzy_search"""
         return self.fuzzy_search(query, top_k)
+
+    def get_lemma_by_name(self, name: str) -> LemmaInfo | None:
+        """
+        Look up a lemma by its exact name.
+
+        Args:
+            name: The exact name of the lemma to find
+
+        Returns:
+            The LemmaInfo object if found, None otherwise
+        """
+        for lemma in self.lemmas:
+            if lemma.name == name:
+                return lemma
+        return None
+
+    def find_similar_lemmas(
+        self, lemma_name: str, top_k: int = 10
+    ) -> list[tuple[LemmaInfo, float]]:
+        """
+        Find lemmas similar to a given lemma (by name).
+
+        This looks up the lemma by name, gets its full definition (signature,
+        documentation, requires/ensures clauses), and finds other lemmas
+        with similar semantics.
+
+        Args:
+            lemma_name: The name of the lemma to find similar lemmas for
+            top_k: Number of similar lemmas to return
+
+        Returns:
+            List of (LemmaInfo, score) tuples, excluding the input lemma itself.
+            Returns empty list if the lemma is not found.
+        """
+        # Look up the source lemma
+        source_lemma = self.get_lemma_by_name(lemma_name)
+        if source_lemma is None:
+            print(f"⚠️  Lemma '{lemma_name}' not found in index")
+            return []
+
+        # Use the lemma's searchable text as the query
+        query = source_lemma.to_searchable_text(normalize=True)
+
+        # Search for similar lemmas (get extra to account for excluding self)
+        results = self.search(query, top_k + 1)
+
+        # Filter out the source lemma itself
+        filtered_results = [
+            (lemma, score) for lemma, score in results if lemma.name != lemma_name
+        ]
+
+        return filtered_results[:top_k]

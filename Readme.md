@@ -35,11 +35,26 @@ Open http://localhost:8000 and search!
 ### CLI Search
 
 ```bash
-# Search for lemmas about division
+# Search by natural language
 uv run python -m verus_lemma_finder search "dividing both sides preserves inequality" data/vstd_lemma_index.json
 
-# Interactive mode - explore and refine queries
+# Find lemmas similar to a known lemma
+uv run python -m verus_lemma_finder similar lemma_mod_adds data/vstd_lemma_index.json
+
+# Interactive mode
 uv run python -m verus_lemma_finder interactive data/vstd_lemma_index.json
+```
+
+### Python API
+
+```python
+from verus_lemma_finder import get_similar_lemmas, get_similar_to_lemma
+
+# Search by query
+results = get_similar_lemmas("modulo bounds", index_path="data/vstd_lemma_index.json")
+
+# Find lemmas similar to a known lemma
+results = get_similar_to_lemma("lemma_mod_adds", index_path="data/vstd_lemma_index.json")
 ```
 
 ## Add Your Own Project
@@ -59,6 +74,7 @@ This generates SCIP, builds the index, and configures the demo server.
 | Topic | Link |
 |-------|------|
 | **Full Usage Guide** | [`docs/usage.md`](docs/usage.md) |
+| **Python API** | [`docs/api.md`](docs/api.md) |
 | Web Demo | [`demo/quickstart.md`](demo/quickstart.md) |
 | Installation | [`docs/install.md`](docs/install.md) |
 | Rust Parser | [`docs/rust-parser.md`](docs/rust-parser.md) |

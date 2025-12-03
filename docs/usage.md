@@ -8,6 +8,7 @@ Detailed guide for using verus_lemma_finder.
 |------|---------|
 | Add new project index | `uv run python scripts/add_index.py` |
 | Search lemmas | `uv run python -m verus_lemma_finder search "query" index.json` |
+| Find similar lemmas | `uv run python -m verus_lemma_finder similar lemma_name index.json` |
 | Interactive mode | `uv run python -m verus_lemma_finder interactive index.json` |
 | Start web demo | `./demo/start_demo.sh` |
 
@@ -165,9 +166,24 @@ Options:
 uv run python -m verus_lemma_finder search <query> <index_file> [options]
 
 Options:
+  -k, --top-k N          Number of results (default: 10)
+```
+
+### `similar` - Find lemmas similar to a known lemma
+
+Given a lemma name, finds other lemmas with similar semantics based on the lemma's full definition (signature, documentation, requires/ensures clauses).
+
+```bash
+uv run python -m verus_lemma_finder similar <lemma_name> <index_file> [options]
+
+Options:
   -k, --top-k N          Number of results (default: 5)
-  --keyword-only         Use keyword search only (no embeddings)
-  --hybrid               Use hybrid search (embeddings + keywords)
+```
+
+Example:
+```bash
+uv run python -m verus_lemma_finder similar lemma_mod_adds data/vstd_lemma_index.json -k 3
+# Shows: lemma_pow_adds, lemma_add_mod_noop, lemma_mod_mod
 ```
 
 ### `interactive` - Interactive search REPL
@@ -199,6 +215,18 @@ uv run python -m verus_lemma_finder generate-scip <project_path> [options]
 
 Options:
   -o, --output FILE      Output SCIP JSON file
+```
+
+### `enrich-graph` - Add similar lemmas to a call graph
+
+Enriches a call graph JSON (from scip-callgraph) by adding similar lemmas to each node.
+
+```bash
+uv run python -m verus_lemma_finder enrich-graph <graph_file> <index_file> [options]
+
+Options:
+  -o, --output FILE      Output file (default: overwrites input)
+  -k, --top-k N          Similar lemmas per node (default: 3)
 ```
 
 ## Query Tips
@@ -259,6 +287,7 @@ cd rust && maturin develop --release
 
 ## See Also
 
+- [Python API Reference](api.md)
 - [Installation Guide](install.md)
 - [Search Tips](search-tips.md)
 - [Rust Parser Details](rust-parser.md)
