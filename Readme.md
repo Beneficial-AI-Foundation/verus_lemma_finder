@@ -137,3 +137,5 @@ uv run python -m verus_lemma_finder search "a * b <= c implies a <= c / b" data/
 ## License
 
 MIT
+
+🤖 Generated with Claude Opus 4.5
